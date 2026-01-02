@@ -529,8 +529,12 @@ async def get_available_formats(request: VideoRequest, req: Request):
         raise HTTPException(status_code=504, detail="Request timeout: video processing took too long")
     
     except Exception as e:
-        logger.error(f"Error fetching formats: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to fetch formats: {str(e)}")
+        error_msg = str(e)
+        # Truncate very long error messages to prevent issues
+        if len(error_msg) > 500:
+            error_msg = error_msg[:500] + "..."
+        logger.error(f"Error fetching formats: {error_msg}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to fetch formats: {error_msg}")
 
 
 @app.get("/api/download")
@@ -814,6 +818,20 @@ async def http_exception_handler(request: Request, exc: HTTPException):
         content=ErrorResponse(
             success=False,
             error=exc.detail,
+            details=None
+        ).model_dump()
+    )
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """Global exception handler to ensure all errors return JSON."""
+    logger.error(f"Unhandled exception: {str(exc)}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content=ErrorResponse(
+            success=False,
+            error=f"Internal server error: {str(exc)}",
             details=None
         ).model_dump()
     )
