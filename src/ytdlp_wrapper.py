@@ -56,16 +56,10 @@ def _get_youtube_options(player_client: str = "ios") -> list:
     if cookies_path and os.path.exists(cookies_path):
         options.extend(["--cookies", cookies_path])
         logger.info(f"Using cookies from: {cookies_path}")
-    else:
-        # Try to use cookies from browser if available (for local development)
-        try:
-            import platform
-            if platform.system() != "Windows":  # Browser cookie extraction works better on Linux/Mac
-                # Try to extract cookies from browser automatically
-                options.extend(["--cookies-from-browser", "chrome"])
-                logger.info("Attempting to use cookies from Chrome browser")
-        except:
-            pass
+    # Note: Removed automatic --cookies-from-browser chrome fallback
+    # This was causing errors on Render.com where Chrome is not installed.
+    # To use browser cookies, explicitly set YOUTUBE_COOKIES_FILE environment variable
+    # with the path to an exported cookies.txt file.
     
     return options
 
