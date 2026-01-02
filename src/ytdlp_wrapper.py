@@ -12,6 +12,42 @@ from .config import settings
 logger = logging.getLogger(__name__)
 
 
+def _get_youtube_options() -> list:
+    """
+    Get YouTube-specific options to bypass bot detection.
+    Returns a list of command-line arguments for yt-dlp.
+    """
+    options = [
+        "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "--referer", "https://www.youtube.com/",
+        "--add-header", "Accept:text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "--add-header", "Accept-Language:en-us,en;q=0.5",
+        "--add-header", "Accept-Encoding:gzip,deflate",
+        "--add-header", "DNT:1",
+        "--add-header", "Connection:keep-alive",
+        "--add-header", "Upgrade-Insecure-Requests:1",
+    ]
+    
+    # Add YouTube extractor args to bypass bot detection
+    # Using 'android' client is more reliable and less likely to trigger bot detection
+    # Fallback to 'web' if android doesn't work
+    youtube_extractor_args = [
+        "player_client=android",  # More reliable, less bot detection
+    ]
+    
+    options.extend([
+        "--extractor-args", f"youtube:{','.join(youtube_extractor_args)}"
+    ])
+    
+    # Optional: Support cookies from environment variable
+    cookies_path = os.getenv("YOUTUBE_COOKIES_FILE")
+    if cookies_path and os.path.exists(cookies_path):
+        options.extend(["--cookies", cookies_path])
+        logger.info(f"Using cookies from: {cookies_path}")
+    
+    return options
+
+
 class YtDlpWrapper:
     """Non-blocking yt-dlp wrapper using async subprocess."""
     
@@ -47,9 +83,10 @@ class YtDlpWrapper:
                     "--no-playlist",  # Single video only
                     "--no-warnings",
                     "--no-check-certificate",
-                    "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-                    url
                 ]
+                # Add YouTube-specific options to bypass bot detection
+                cmd.extend(_get_youtube_options())
+                cmd.append(url)
                 
                 # Execute yt-dlp as async subprocess
                 process = await asyncio.create_subprocess_exec(
@@ -157,12 +194,13 @@ class YtDlpWrapper:
                         "--no-playlist",
                         "--no-warnings",
                         "--no-check-certificate",
-                        "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
                         "-f", format_selector,
                         "--merge-output-format", "mp4",  # Ensure proper merging
                         "-o", temp_file_path,  # Output to temp file
-                        url
                     ]
+                    # Add YouTube-specific options to bypass bot detection
+                    cmd.extend(_get_youtube_options())
+                    cmd.append(url)
                     logger.info(f"Downloading and merging to: {temp_file_path}")
                     logger.info(f"Format selector: {format_selector}")
                     logger.info(f"Command: yt-dlp -f '{format_selector}' --merge-output-format mp4 ...")
@@ -175,8 +213,9 @@ class YtDlpWrapper:
                         "--no-playlist",  # Single video only
                         "--no-warnings",
                         "--no-check-certificate",  # Avoid SSL issues
-                        "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
                     ]
+                    # Add YouTube-specific options to bypass bot detection
+                    cmd.extend(_get_youtube_options())
                     
                     if format_id:
                         cmd.extend(["-f", f"{format_id}"])
