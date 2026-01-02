@@ -12,31 +12,45 @@ from .config import settings
 logger = logging.getLogger(__name__)
 
 
-def _get_youtube_options() -> list:
+def _get_youtube_options(player_client: str = "ios") -> list:
     """
     Get YouTube-specific options to bypass bot detection.
-    Returns a list of command-line arguments for yt-dlp.
+    
+    Args:
+        player_client: Which player client to use ('ios', 'android', 'web', 'mweb')
+                      iOS is often most reliable for bypassing bot detection
+    
+    Returns:
+        List of command-line arguments for yt-dlp
     """
     options = [
-        "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "--user-agent", "Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1",
         "--referer", "https://www.youtube.com/",
         "--add-header", "Accept:text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "--add-header", "Accept-Language:en-us,en;q=0.5",
-        "--add-header", "Accept-Encoding:gzip,deflate",
-        "--add-header", "DNT:1",
-        "--add-header", "Connection:keep-alive",
+        "--add-header", "Accept-Language:en-US,en;q=0.9",
+        "--add-header", "Accept-Encoding:gzip, deflate, br",
+        "--add-header", "Sec-Fetch-Dest:document",
+        "--add-header", "Sec-Fetch-Mode:navigate",
+        "--add-header", "Sec-Fetch-Site:none",
+        "--add-header", "Sec-Fetch-User:?1",
         "--add-header", "Upgrade-Insecure-Requests:1",
     ]
     
-    # Add YouTube extractor args to bypass bot detection
-    # Using 'android' client is more reliable and less likely to trigger bot detection
-    # Fallback to 'web' if android doesn't work
+    # Add YouTube extractor args - try different player clients
+    # iOS client is often most reliable for bypassing bot detection
     youtube_extractor_args = [
-        "player_client=android",  # More reliable, less bot detection
+        f"player_client={player_client}",
+        "player_skip=webpage",  # Skip webpage parsing, use API directly
     ]
     
     options.extend([
         "--extractor-args", f"youtube:{','.join(youtube_extractor_args)}"
+    ])
+    
+    # Additional YouTube-specific options
+    options.extend([
+        "--no-check-age",  # Don't check video age
+        "--extractor-retries", "3",  # Retry on failures
     ])
     
     # Optional: Support cookies from environment variable
@@ -44,6 +58,16 @@ def _get_youtube_options() -> list:
     if cookies_path and os.path.exists(cookies_path):
         options.extend(["--cookies", cookies_path])
         logger.info(f"Using cookies from: {cookies_path}")
+    else:
+        # Try to use cookies from browser if available (for local development)
+        try:
+            import platform
+            if platform.system() != "Windows":  # Browser cookie extraction works better on Linux/Mac
+                # Try to extract cookies from browser automatically
+                options.extend(["--cookies-from-browser", "chrome"])
+                logger.info("Attempting to use cookies from Chrome browser")
+        except:
+            pass
     
     return options
 
@@ -84,40 +108,82 @@ class YtDlpWrapper:
                     "--no-warnings",
                     "--no-check-certificate",
                 ]
-                # Add YouTube-specific options to bypass bot detection
-                cmd.extend(_get_youtube_options())
-                cmd.append(url)
+                # For YouTube URLs, try multiple player clients to bypass bot detection
+                is_youtube = "youtube.com" in url or "youtu.be" in url
+                player_clients = ["ios", "android", "web", "mweb"] if is_youtube else [None]
+                last_error = None
                 
-                # Execute yt-dlp as async subprocess
-                process = await asyncio.create_subprocess_exec(
-                    *cmd,
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE
-                )
+                for client in player_clients:
+                    try:
+                        cmd = [
+                            "yt-dlp",
+                            "--dump-json",
+                            "--no-playlist",
+                            "--no-warnings",
+                            "--no-check-certificate",
+                        ]
+                        
+                        if client:
+                            cmd.extend(_get_youtube_options(player_client=client))
+                            logger.info(f"Trying YouTube with player_client={client}")
+                        else:
+                            # For non-YouTube URLs, use basic options
+                            cmd.extend([
+                                "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                            ])
+                        cmd.append(url)
+                        
+                        # Execute yt-dlp as async subprocess
+                        process = await asyncio.create_subprocess_exec(
+                            *cmd,
+                            stdout=asyncio.subprocess.PIPE,
+                            stderr=asyncio.subprocess.PIPE
+                        )
+                        
+                        # Wait with timeout
+                        try:
+                            stdout, stderr = await asyncio.wait_for(
+                                process.communicate(),
+                                timeout=settings.ytdlp_timeout_seconds
+                            )
+                        except asyncio.TimeoutError:
+                            process.kill()
+                            await process.wait()
+                            raise asyncio.TimeoutError(f"yt-dlp execution exceeded {settings.ytdlp_timeout_seconds}s timeout")
+                        
+                        # Check exit code
+                        if process.returncode != 0:
+                            error_msg = stderr.decode('utf-8', errors='ignore').strip()
+                            # Check if it's a bot detection error
+                            if is_youtube and ("Sign in to confirm" in error_msg or "bot" in error_msg.lower()):
+                                logger.warning(f"Bot detection with player_client={client}, trying next client...")
+                                last_error = error_msg
+                                continue  # Try next client
+                            else:
+                                # Other error, don't retry
+                                logger.error(f"yt-dlp failed with code {process.returncode}: {error_msg}")
+                                raise RuntimeError(f"yt-dlp execution failed: {error_msg or 'Unknown error'}")
+                        
+                        # Success! Parse and return
+                        output = stdout.decode('utf-8', errors='ignore')
+                        metadata = json.loads(output)
+                        logger.info(f"Successfully fetched {len(metadata.get('formats', []))} formats for: {metadata.get('title', 'Unknown')} (client={client or 'default'})")
+                        return self._process_formats(metadata)
+                        
+                    except (RuntimeError, json.JSONDecodeError) as e:
+                        error_str = str(e)
+                        # If it's not a bot detection error, re-raise
+                        if not is_youtube or ("Sign in to confirm" not in error_str and "bot" not in error_str.lower()):
+                            raise
+                        last_error = error_str
+                        continue
                 
-                # Wait with timeout
-                try:
-                    stdout, stderr = await asyncio.wait_for(
-                        process.communicate(),
-                        timeout=settings.ytdlp_timeout_seconds
-                    )
-                except asyncio.TimeoutError:
-                    process.kill()
-                    await process.wait()
-                    raise asyncio.TimeoutError(f"yt-dlp execution exceeded {settings.ytdlp_timeout_seconds}s timeout")
-                
-                # Check exit code
-                if process.returncode != 0:
-                    error_msg = stderr.decode('utf-8', errors='ignore').strip()
-                    logger.error(f"yt-dlp failed with code {process.returncode}: {error_msg}")
-                    raise RuntimeError(f"yt-dlp execution failed: {error_msg or 'Unknown error'}")
-                
-                # Parse JSON output
-                output = stdout.decode('utf-8', errors='ignore')
-                metadata = json.loads(output)
-                
-                logger.info(f"Successfully fetched {len(metadata.get('formats', []))} formats for: {metadata.get('title', 'Unknown')}")
-                return self._process_formats(metadata)
+                # All clients failed
+                if last_error:
+                    logger.error(f"All player clients failed. Last error: {last_error}")
+                    raise RuntimeError(f"yt-dlp execution failed after trying all player clients: {last_error}")
+                else:
+                    raise RuntimeError("yt-dlp execution failed: Unknown error")
                 
             finally:
                 self._active_processes -= 1
@@ -206,54 +272,123 @@ class YtDlpWrapper:
                     logger.info(f"Command: yt-dlp -f '{format_selector}' --merge-output-format mp4 ...")
                     logger.info(f"Full command: {' '.join(cmd[:6])} ... -f '{format_selector}' ...")
                 else:
-                    # Just get metadata
-                    cmd = [
-                        "yt-dlp",
-                        "--dump-json",  # Output JSON metadata only
-                        "--no-playlist",  # Single video only
-                        "--no-warnings",
-                        "--no-check-certificate",  # Avoid SSL issues
-                    ]
-                    # Add YouTube-specific options to bypass bot detection
-                    cmd.extend(_get_youtube_options())
+                    # Just get metadata - use retry logic for YouTube
+                    is_youtube = "youtube.com" in url or "youtu.be" in url
+                    player_clients = ["ios", "android", "web", "mweb"] if is_youtube else [None]
+                    last_error = None
+                    metadata = None
                     
-                    if format_id:
-                        cmd.extend(["-f", f"{format_id}"])
-                    else:
-                        cmd.extend(["-f", settings.ytdlp_format])
+                    for client in player_clients:
+                        try:
+                            cmd = [
+                                "yt-dlp",
+                                "--dump-json",  # Output JSON metadata only
+                                "--no-playlist",  # Single video only
+                                "--no-warnings",
+                                "--no-check-certificate",  # Avoid SSL issues
+                            ]
+                            
+                            if client:
+                                cmd.extend(_get_youtube_options(player_client=client))
+                                logger.info(f"Trying YouTube metadata extraction with player_client={client}")
+                            else:
+                                cmd.extend([
+                                    "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                                ])
+                            
+                            if format_id:
+                                cmd.extend(["-f", f"{format_id}"])
+                            else:
+                                cmd.extend(["-f", settings.ytdlp_format])
+                            
+                            cmd.append(url)
+                            
+                            # Execute yt-dlp as async subprocess
+                            process = await asyncio.create_subprocess_exec(
+                                *cmd,
+                                stdout=asyncio.subprocess.PIPE,
+                                stderr=asyncio.subprocess.PIPE
+                            )
+                            
+                            # Wait with timeout
+                            timeout = settings.ytdlp_timeout_seconds
+                            logger.info(f"Using timeout: {timeout}s (metadata)")
+                            try:
+                                stdout, stderr = await asyncio.wait_for(
+                                    process.communicate(),
+                                    timeout=timeout
+                                )
+                            except asyncio.TimeoutError:
+                                process.kill()
+                                await process.wait()
+                                raise asyncio.TimeoutError(f"yt-dlp execution exceeded {timeout}s timeout")
+                            
+                            # Check exit code
+                            if process.returncode != 0:
+                                error_msg = stderr.decode('utf-8', errors='ignore').strip()
+                                # Check if it's a bot detection error
+                                if is_youtube and ("Sign in to confirm" in error_msg or "bot" in error_msg.lower()):
+                                    logger.warning(f"Bot detection with player_client={client}, trying next client...")
+                                    last_error = error_msg
+                                    continue  # Try next client
+                                else:
+                                    # Other error, don't retry
+                                    logger.error(f"yt-dlp failed with code {process.returncode}: {error_msg}")
+                                    raise RuntimeError(f"yt-dlp execution failed: {error_msg or 'Unknown error'}")
+                            
+                            # Success! Parse and return
+                            output = stdout.decode('utf-8', errors='ignore')
+                            metadata = json.loads(output)
+                            logger.info(f"Successfully extracted metadata (client={client or 'default'})")
+                            break  # Success, exit retry loop
+                            
+                        except (RuntimeError, json.JSONDecodeError) as e:
+                            error_str = str(e)
+                            # If it's not a bot detection error, re-raise
+                            if not is_youtube or ("Sign in to confirm" not in error_str and "bot" not in error_str.lower()):
+                                raise
+                            last_error = error_str
+                            continue
                     
-                    cmd.append(url)
+                    # Check if all clients failed
+                    if metadata is None:
+                        if last_error:
+                            logger.error(f"All player clients failed for metadata extraction. Last error: {last_error}")
+                            raise RuntimeError(f"yt-dlp execution failed after trying all player clients: {last_error}")
+                        else:
+                            raise RuntimeError("Failed to extract metadata: Unknown error")
                 
-                # Execute yt-dlp as async subprocess
-                process = await asyncio.create_subprocess_exec(
-                    *cmd,
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE
-                )
-                
-                # Wait with timeout
-                # Use longer timeout for downloads (merging can take time), shorter for metadata
-                timeout = settings.ytdlp_timeout_seconds * 10 if temp_file_path else settings.ytdlp_timeout_seconds
-                logger.info(f"Using timeout: {timeout}s ({'download' if temp_file_path else 'metadata'})")
-                try:
-                    stdout, stderr = await asyncio.wait_for(
-                        process.communicate(),
-                        timeout=timeout
+                # For download path, execute directly (already set up above)
+                if temp_file_path:
+                    # Execute yt-dlp as async subprocess
+                    process = await asyncio.create_subprocess_exec(
+                        *cmd,
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE
                     )
-                except asyncio.TimeoutError:
-                    process.kill()
-                    await process.wait()
-                    raise asyncio.TimeoutError(f"yt-dlp execution exceeded {timeout}s timeout")
-                
-                # Check exit code
-                if process.returncode != 0:
-                    error_msg = stderr.decode('utf-8', errors='ignore').strip()
-                    logger.error(f"yt-dlp failed with code {process.returncode}: {error_msg}")
-                    raise RuntimeError(f"yt-dlp execution failed: {error_msg or 'Unknown error'}")
-                
-                # Parse JSON output
-                output = stdout.decode('utf-8', errors='ignore')
-                metadata = json.loads(output)
+                    
+                    # Wait with timeout
+                    timeout = settings.ytdlp_timeout_seconds * 10  # Longer for downloads
+                    logger.info(f"Using timeout: {timeout}s (download)")
+                    try:
+                        stdout, stderr = await asyncio.wait_for(
+                            process.communicate(),
+                            timeout=timeout
+                        )
+                    except asyncio.TimeoutError:
+                        process.kill()
+                        await process.wait()
+                        raise asyncio.TimeoutError(f"yt-dlp execution exceeded {timeout}s timeout")
+                    
+                    # Check exit code
+                    if process.returncode != 0:
+                        error_msg = stderr.decode('utf-8', errors='ignore').strip()
+                        logger.error(f"yt-dlp failed with code {process.returncode}: {error_msg}")
+                        raise RuntimeError(f"yt-dlp execution failed: {error_msg or 'Unknown error'}")
+                    
+                    # Parse JSON output
+                    output = stdout.decode('utf-8', errors='ignore')
+                    metadata = json.loads(output)
                 
                 # If we downloaded a file, get the actual file path
                 if temp_file_path:
