@@ -2,6 +2,10 @@
 
 ## Quick Deployment Steps
 
+### ⚠️ Payment Info Note
+Render may ask for payment info even for free tier (for verification). Use **Manual Setup** below to potentially avoid this.
+
+### Option A: Blueprint (May require payment info)
 1. **Push to GitHub**
    ```bash
    git add .
@@ -15,7 +19,17 @@
    - Connect your GitHub repo
    - Click "Apply"
 
-That's it! Render will use `render.yaml` for configuration.
+### Option B: Manual Setup (Recommended)
+1. **Push to GitHub** (same as above)
+
+2. **Manual Deployment**
+   - Go to https://dashboard.render.com
+   - Click "New +" → "Web Service"
+   - Connect your repo
+   - **Build Command**: `pip install -r requirements.txt`
+   - **Start Command**: `uvicorn main:app --host 0.0.0.0 --port $PORT`
+   - **Instance Type**: Select **Free**
+   - Click "Create Web Service"
 
 ## What's Configured
 

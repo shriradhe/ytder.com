@@ -10,7 +10,16 @@ This guide will help you deploy the ytder video downloader to Render.com.
 
 ## 🔧 Deployment Steps
 
-### Option 1: Using render.yaml (Recommended)
+### ⚠️ Payment Information Note
+
+Render.com may require payment information even for free tier services. This is for account verification purposes:
+- A $1 authorization charge may be placed (immediately reversed)
+- This is to prevent abuse and fraud
+- The free tier is still free - you won't be charged
+
+**If you prefer not to provide payment info**, use **Option 2 (Manual Setup)** below instead of the blueprint.
+
+### Option 1: Using render.yaml (Blueprint)
 
 1. **Push your code to GitHub** (if not already done)
    ```bash
@@ -29,6 +38,7 @@ This guide will help you deploy the ytder video downloader to Render.com.
 
 4. **Review and Deploy**
    - Render will use the configuration from `render.yaml`
+   - You may be prompted for payment information (for verification only)
    - Click "Apply" to deploy
 
 ### Option 2: Manual Setup
