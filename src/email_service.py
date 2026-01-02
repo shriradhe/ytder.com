@@ -2,28 +2,44 @@
 import logging
 from typing import List, Optional
 from datetime import datetime
-from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
-from pydantic import EmailStr
 from sqlalchemy.orm import Session
 from .database import EmailNotification, NotificationStatus
 import os
 
 logger = logging.getLogger(__name__)
 
-# Email configuration
-email_conf = ConnectionConfig(
-    MAIL_USERNAME=os.getenv("MAIL_USERNAME", "your-email@example.com"),
-    MAIL_PASSWORD=os.getenv("MAIL_PASSWORD", "your-password"),
-    MAIL_FROM=os.getenv("MAIL_FROM", "noreply@videodownloader.com"),
-    MAIL_PORT=int(os.getenv("MAIL_PORT", 587)),
-    MAIL_SERVER=os.getenv("MAIL_SERVER", "smtp.gmail.com"),
-    MAIL_STARTTLS=os.getenv("MAIL_STARTTLS", "True").lower() == "true",
-    MAIL_SSL_TLS=os.getenv("MAIL_SSL_TLS", "False").lower() == "true",
-    USE_CREDENTIALS=True,
-    VALIDATE_CERTS=True
-)
-
-fastmail = FastMail(email_conf)
+# Try to import fastapi-mail with error handling for Pydantic v2 compatibility
+try:
+    from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
+    from pydantic import EmailStr
+    
+    # Email configuration
+    email_conf = ConnectionConfig(
+        MAIL_USERNAME=os.getenv("MAIL_USERNAME", "your-email@example.com"),
+        MAIL_PASSWORD=os.getenv("MAIL_PASSWORD", "your-password"),
+        MAIL_FROM=os.getenv("MAIL_FROM", "noreply@videodownloader.com"),
+        MAIL_PORT=int(os.getenv("MAIL_PORT", 587)),
+        MAIL_SERVER=os.getenv("MAIL_SERVER", "smtp.gmail.com"),
+        MAIL_STARTTLS=os.getenv("MAIL_STARTTLS", "True").lower() == "true",
+        MAIL_SSL_TLS=os.getenv("MAIL_SSL_TLS", "False").lower() == "true",
+        USE_CREDENTIALS=True,
+        VALIDATE_CERTS=True
+    )
+    
+    fastmail = FastMail(email_conf)
+    EMAIL_AVAILABLE = True
+except (ImportError, NameError) as e:
+    logger.warning(f"FastAPI-Mail not available or incompatible: {e}")
+    logger.warning("Email functionality will be disabled. Update fastapi-mail to a Pydantic v2 compatible version.")
+    EMAIL_AVAILABLE = False
+    FastMail = None
+    MessageSchema = None
+    ConnectionConfig = None
+    MessageType = None
+    fastmail = None
+    # Define EmailStr as a fallback
+    from pydantic import EmailStr as _EmailStr
+    EmailStr = _EmailStr
 
 
 class EmailService:
@@ -63,6 +79,15 @@ class EmailService:
             db.add(notification_log)
             db.commit()
             db.refresh(notification_log)
+        
+        if not EMAIL_AVAILABLE:
+            error_msg = "Email service is not available. FastAPI-Mail may not be compatible with your Pydantic version."
+            logger.error(error_msg)
+            if db and notification_log:
+                notification_log.status = NotificationStatus.FAILED
+                notification_log.error_message = error_msg
+                db.commit()
+            return False
         
         try:
             # Create message

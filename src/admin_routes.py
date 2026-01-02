@@ -30,7 +30,12 @@ from .models import (
     SeoSettingsCreate, SeoSettingsUpdate, SeoSettingsResponse,
     NewsCreate, NewsUpdate, NewsResponse
 )
-from .email_service import EmailService
+# Lazy import for email service to avoid startup errors with fastapi-mail compatibility
+try:
+    from .email_service import EmailService
+except ImportError as e:
+    logger.warning(f"Email service not available: {e}")
+    EmailService = None
 from .export_service import ExportService
 from .translation_service import TranslationService
 
@@ -1119,6 +1124,9 @@ async def send_email_notification(
     current_admin = Depends(get_current_admin)
 ):
     """Send an email notification."""
+    if EmailService is None:
+        raise HTTPException(status_code=503, detail="Email service is not available")
+    
     success = await EmailService.send_admin_notification(
         recipient=email_data.recipient,
         title=email_data.subject,
