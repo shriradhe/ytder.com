@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: ytder-video-downloader
+    env: python
+    plan: starter  # Change to 'standard' or 'pro' for production
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: HOST
+        value: 0.0.0.0
+      # Database: Use Render's PostgreSQL service and set DATABASE_URL
+      # - key: DATABASE_URL
+      #   fromDatabase:
+      #     name: ytder-db
+      #     property: connectionString
+      # Add your custom environment variables here:
+      # - key: MAX_CONCURRENT_DOWNLOADS
+      #   value: 10
+      # - key: CACHE_TTL_SECONDS
+      #   value: 3600
+      # - key: RATE_LIMIT_PER_MINUTE
+      #   value: 30
+    healthCheckPath: /api/health
+    autoDeploy: true
+

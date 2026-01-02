@@ -1,4 +1,5 @@
 """Configuration settings for the video download service."""
+import os
 from pydantic_settings import BaseSettings
 
 
@@ -6,8 +7,11 @@ class Settings(BaseSettings):
     """Application settings with sensible defaults for production."""
     
     # Server settings
-    host: str = "127.0.0.1"
-    port: int = 8000
+    # Use 0.0.0.0 for Render.com (allows external connections)
+    # Use 127.0.0.1 for local development
+    host: str = os.getenv("HOST", "0.0.0.0")
+    # Render.com sets PORT environment variable automatically
+    port: int = int(os.getenv("PORT", "8000"))
     
     # Concurrency settings
     max_concurrent_downloads: int = 10  # Max parallel yt-dlp processes

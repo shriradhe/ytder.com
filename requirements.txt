@@ -15,4 +15,6 @@ fastapi-mail>=1.4.1
 reportlab>=4.0.0
 babel>=2.14.0
 websockets>=12.0
+# PostgreSQL support (optional - uncomment if using PostgreSQL on Render)
+# psycopg2-binary>=2.9.0
 
