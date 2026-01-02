@@ -1,0 +1,1754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Downloader - Download HD Videos from Any Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f8f9fa;
+            color: #212529;
+            line-height: 1.6;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 42px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            font-size: 18px;
+            opacity: 0.95;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 900px;
+            margin: -40px auto 60px;
+            padding: 0 20px;
+        }
+
+        /* Download Card */
+        .download-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            margin-bottom: 40px;
+        }
+
+        .input-wrapper {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .url-input {
+            width: 100%;
+            padding: 18px 24px;
+            font-size: 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .url-input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .url-input::placeholder {
+            color: #adb5bd;
+        }
+
+        .status-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .status-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .status-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Features Section */
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin: 50px 0;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .feature-card.clickable {
+            cursor: pointer;
+        }
+
+        .feature-card.clickable:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+        }
+
+        .feature-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .feature-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #212529;
+        }
+
+        .feature-desc {
+            font-size: 14px;
+            color: #6c757d;
+            line-height: 1.6;
+        }
+
+        /* Video Info Section */
+        .video-section {
+            display: none;
+            margin-top: 30px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .video-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .video-header {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            align-items: flex-start;
+        }
+
+        .video-thumbnail {
+            flex-shrink: 0;
+            width: 240px;
+            height: 135px;
+            border-radius: 12px;
+            object-fit: cover;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .video-details {
+            flex: 1;
+        }
+
+        .video-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #212529;
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+
+        .video-meta {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            font-size: 14px;
+            color: #6c757d;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Format Tabs */
+        .format-tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 0;
+        }
+
+        .format-tab {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            color: #6c757d;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            margin-bottom: -2px;
+        }
+
+        .format-tab:hover {
+            color: #667eea;
+        }
+
+        .format-tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        /* Format List */
+        .formats-container {
+            max-height: 450px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .formats-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .formats-container::-webkit-scrollbar-track {
+            background: #f1f3f5;
+            border-radius: 10px;
+        }
+
+        .formats-container::-webkit-scrollbar-thumb {
+            background: #adb5bd;
+            border-radius: 10px;
+        }
+
+        .format-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .format-item:hover {
+            background: white;
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+        }
+
+        .format-item.selected {
+            background: #e7f3ff;
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .format-info {
+            flex: 1;
+        }
+
+        .format-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .format-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .format-badge.combined {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .format-badge.video {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .format-badge.audio {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .format-quality {
+            font-size: 18px;
+            font-weight: 600;
+            color: #212529;
+        }
+
+        .format-specs {
+            font-size: 13px;
+            color: #6c757d;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .format-specs span {
+            white-space: nowrap;
+        }
+
+        .download-action {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 25px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+            display: none;
+        }
+
+        .download-action.show {
+            display: block;
+        }
+
+        .download-action:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+        }
+
+        .download-action:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Error Message */
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            display: none;
+            border-left: 4px solid #dc3545;
+            animation: shake 0.5s ease;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        /* Download Progress Modal */
+        .download-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .download-modal.show {
+            display: flex;
+        }
+
+        .download-modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .download-modal-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .download-modal-icon {
+            font-size: 60px;
+            margin-bottom: 15px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .download-modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 10px;
+        }
+
+        .download-modal-filename {
+            font-size: 14px;
+            color: #666;
+            word-break: break-word;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .download-progress-container {
+            margin: 30px 0;
+        }
+
+        .download-progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #f0f0f0;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .download-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #20c997);
+            border-radius: 15px;
+            transition: width 0.3s ease;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .download-progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.3),
+                transparent
+            );
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .download-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .download-stats-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .download-stats-label {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 5px;
+        }
+
+        .download-stats-value {
+            font-weight: 700;
+            color: #333;
+        }
+
+        .download-modal-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .download-modal-btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .download-modal-btn.cancel {
+            background: #dc3545;
+            color: white;
+        }
+
+        .download-modal-btn.cancel:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+        }
+
+        .download-modal-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Loading State */
+        .loading-overlay {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .loading-overlay.show {
+            display: block;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: #6c757d;
+            font-size: 16px;
+        }
+
+        /* No Formats Message */
+        .no-formats {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+
+        .no-formats-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        /* Footer */
+        .footer {
+            background: #212529;
+            color: #adb5bd;
+            padding: 40px 20px;
+            text-align: center;
+            margin-top: 80px;
+        }
+
+        .footer-content {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .footer-link {
+            color: #adb5bd;
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.3s ease;
+        }
+
+        .footer-link:hover {
+            color: white;
+        }
+
+        .footer-text {
+            font-size: 14px;
+            opacity: 0.7;
+        }
+
+        /* Latest News Section */
+        .latest-news-section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            padding: 0;
+            margin: 30px 0;
+            overflow: hidden;
+        }
+
+        .latest-news-header {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .latest-news-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        .news-icon {
+            font-size: 18px;
+        }
+
+        .news-label {
+            letter-spacing: 1px;
+        }
+
+        .latest-news-date {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .latest-news-container {
+            padding: 0;
+            background: #1e3a5f;
+            position: relative;
+        }
+
+        .latest-news-scroll {
+            display: flex;
+            gap: 25px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding: 15px 20px;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .latest-news-scroll::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .latest-news-scroll::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .latest-news-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+        }
+
+        .news-item {
+            flex: 0 0 auto;
+            min-width: auto;
+            background: transparent;
+            padding: 0;
+            border-radius: 0;
+            box-shadow: none;
+            border: none;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .news-item:hover {
+            opacity: 0.8;
+        }
+
+        .news-item-number {
+            color: white;
+            font-weight: 600;
+            font-size: 13px;
+            margin-right: 8px;
+            display: inline;
+        }
+
+        .news-item-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: white;
+            margin: 0;
+            display: inline;
+            line-height: 1.5;
+        }
+
+        .news-item-date {
+            color: #28a745;
+            font-size: 13px;
+            font-weight: 600;
+            margin-left: 8px;
+            display: inline;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 32px;
+            }
+
+            .header p {
+                font-size: 16px;
+            }
+
+            .download-card {
+                padding: 25px;
+            }
+
+            .video-header {
+                flex-direction: column;
+            }
+
+            .video-thumbnail {
+                width: 100%;
+                height: auto;
+                aspect-ratio: 16/9;
+            }
+
+            .features {
+                grid-template-columns: 1fr;
+            }
+
+            .latest-news-header {
+                padding: 10px 15px;
+            }
+
+            .latest-news-title {
+                font-size: 12px;
+            }
+
+            .latest-news-date {
+                font-size: 11px;
+            }
+
+            .latest-news-scroll {
+                padding: 12px 15px;
+            }
+
+            .news-item-title {
+                font-size: 12px;
+            }
+
+            .news-item-date {
+                font-size: 11px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <h1>📹 Video Downloader</h1>
+        <p>Download HD videos from YouTube, Instagram, Facebook, TikTok, and 8+ more platforms. Fast, free, and easy.</p>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Download Card -->
+        <div class="download-card">
+            <form id="videoForm">
+                <div class="input-wrapper">
+                    <input 
+                        type="text" 
+                        id="videoUrl" 
+                        class="url-input"
+                        placeholder="Paste video URL here (YouTube, Instagram, TikTok, etc.)"
+                        autocomplete="off"
+                    >
+                </div>
+                <button type="submit" id="statusBtn" class="status-btn">
+                    Paste video URL above
+                </button>
+            </form>
+
+            <!-- Loading State -->
+            <div id="loadingOverlay" class="loading-overlay">
+                <div class="spinner"></div>
+                <div class="loading-text">Processing your video...</div>
+            </div>
+
+            <!-- Error Message -->
+            <div id="errorMessage" class="error-message"></div>
+
+            <!-- Download Progress Modal -->
+            <div id="downloadModal" class="download-modal">
+                <div class="download-modal-content">
+                    <div class="download-modal-header">
+                        <div class="download-modal-icon">⬇️</div>
+                        <div class="download-modal-title">Downloading...</div>
+                        <div class="download-modal-filename" id="downloadFilename"></div>
+                    </div>
+                    
+                    <div class="download-progress-container">
+                        <div class="download-progress-bar">
+                            <div id="downloadProgressFill" class="download-progress-fill" style="width: 0%">
+                                <span id="downloadProgressText">0%</span>
+                            </div>
+                        </div>
+                        
+                        <div class="download-stats">
+                            <div class="download-stats-item">
+                                <div class="download-stats-label">Downloaded</div>
+                                <div class="download-stats-value" id="downloadedSize">0 MB</div>
+                            </div>
+                            <div class="download-stats-item">
+                                <div class="download-stats-label">Total Size</div>
+                                <div class="download-stats-value" id="totalSize">-- MB</div>
+                            </div>
+                            <div class="download-stats-item">
+                                <div class="download-stats-label">Speed</div>
+                                <div class="download-stats-value" id="downloadSpeed">-- MB/s</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="download-modal-actions">
+                        <button id="cancelDownloadBtn" class="download-modal-btn cancel">
+                            ❌ Cancel Download
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Video Info Section -->
+            <div id="videoSection" class="video-section">
+                <!-- Video Header -->
+                <div class="video-header">
+                    <img id="videoThumbnail" class="video-thumbnail" alt="Video thumbnail">
+                    <div class="video-details">
+                        <h2 id="videoTitle" class="video-title"></h2>
+                        <div id="videoMeta" class="video-meta"></div>
+                    </div>
+                </div>
+
+                <!-- Format Tabs -->
+                <div class="format-tabs">
+                    <button class="format-tab active" data-tab="combined">Video + Audio</button>
+                    <button class="format-tab" data-tab="video">Video Only</button>
+                    <button class="format-tab" data-tab="audio">Audio Only</button>
+                </div>
+
+                <!-- Formats List -->
+                <div id="formatsContainer" class="formats-container"></div>
+
+                <!-- Download Button -->
+                <button id="downloadBtn" class="download-action">
+                    ⬇️ Download Selected Format
+                </button>
+            </div>
+        </div>
+
+        <!-- Latest News Section -->
+        <div id="latestNewsSection" class="latest-news-section" style="display: none;">
+            <div class="latest-news-header">
+                <div class="latest-news-title">
+                    <span class="news-icon">⚡</span>
+                    <span class="news-label">LATEST NEWS</span>
+                </div>
+                <div class="latest-news-date" id="currentDate"></div>
+            </div>
+            <div class="latest-news-container">
+                <div class="latest-news-scroll" id="latestNewsScroll">
+                    <!-- News items will be loaded dynamically -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Features Section (Dynamic) -->
+        <div id="featuresContainer" class="features">
+            <!-- Features will be loaded dynamically -->
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <div class="footer-content">
+            <div id="footerLinks" class="footer-links">
+                <a href="/" class="footer-link">Home</a>
+            </div>
+            <div class="footer-text">
+                © 2025 Video Downloader. Powered by yt-dlp. All rights reserved.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load home sections dynamically
+        async function loadHomeSections() {
+            try {
+                const response = await fetch('/api/home-sections');
+                if (response.ok) {
+                    const sections = await response.json();
+                    const container = document.getElementById('featuresContainer');
+                    
+                    if (sections.length > 0) {
+                        container.innerHTML = sections.map(section => {
+                            // Parse link from description (format: __LINK__url__LINK__)
+                            let description = section.description || '';
+                            let link = '';
+                            const linkMatch = description.match(/__LINK__(.+?)__LINK__/);
+                            if (linkMatch) {
+                                link = linkMatch[1];
+                                description = description.replace(/__LINK__.+?__LINK__/g, '').trim();
+                            }
+                            
+                            // Make card clickable if link exists
+                            const cardClass = link ? 'feature-card clickable' : 'feature-card';
+                            const onClick = link ? `onclick="window.open('${link}', '_blank')"` : '';
+                            
+                            return `
+                            <div class="${cardClass}" ${onClick}>
+                                <div class="feature-icon">${section.icon}</div>
+                                <div class="feature-title">${section.title}</div>
+                                <div class="feature-desc">${description}</div>
+                            </div>
+                        `;
+                        }).join('');
+                    } else {
+                        // Fallback if no sections
+                        container.innerHTML = '<p style="text-align:center; color:#888;">Loading features...</p>';
+                    }
+                }
+            } catch (err) {
+                console.log('Could not load home sections');
+                // Show fallback content
+                const container = document.getElementById('featuresContainer');
+                container.innerHTML = `
+                    <div class="feature-card">
+                        <div class="feature-icon">🎬</div>
+                        <div class="feature-title">Highest Quality</div>
+                        <div class="feature-desc">Download videos in Full HD, 2K, and 4K with original audio quality</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">⚡</div>
+                        <div class="feature-title">Lightning Fast</div>
+                        <div class="feature-desc">Instant detection and processing. Cached videos load in under 1 second</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🎯</div>
+                        <div class="feature-title">Multi-Platform</div>
+                        <div class="feature-desc">Supports YouTube, Instagram, TikTok, Facebook, Twitter, Vimeo, and more</div>
+                    </div>
+                `;
+            }
+        }
+
+        // Load footer links dynamically
+        async function loadFooterLinks() {
+            try {
+                const response = await fetch('/api/pages');
+                if (response.ok) {
+                    const pages = await response.json();
+                    const footerLinks = document.getElementById('footerLinks');
+                    
+                    if (pages.length > 0) {
+                        const pageLinks = pages.map(page => 
+                            `<a href="/pages/${page.slug}" class="footer-link">${page.title}</a>`
+                        ).join('');
+                        
+                        footerLinks.innerHTML = `
+                            <a href="/" class="footer-link">Home</a>
+                            ${pageLinks}
+                        `;
+                    } else {
+                        // No pages yet
+                        footerLinks.innerHTML = `
+                            <a href="/" class="footer-link">Home</a>
+                        `;
+                    }
+                }
+            } catch (err) {
+                console.log('Could not load footer links');
+            }
+        }
+
+        // Load Latest News
+        async function loadLatestNews() {
+            try {
+                const response = await fetch('/api/news');
+                if (response.ok) {
+                    const newsItems = await response.json();
+                    const newsSection = document.getElementById('latestNewsSection');
+                    const newsScroll = document.getElementById('latestNewsScroll');
+                    const currentDateEl = document.getElementById('currentDate');
+                    
+                    // Set current date
+                    const now = new Date();
+                    const dateStr = now.toLocaleDateString('en-GB', { 
+                        day: '2-digit', 
+                        month: 'short', 
+                        year: 'numeric' 
+                    }).replace(/ /g, '.');
+                    currentDateEl.innerHTML = `🕐 ${dateStr}`;
+                    
+                    if (newsItems.length > 0) {
+                        // Show news section
+                        newsSection.style.display = 'block';
+                        
+                        // Generate news items HTML
+                        newsScroll.innerHTML = newsItems.map((item, index) => {
+                            const newsDate = new Date(item.news_date);
+                            const formattedDate = newsDate.toLocaleDateString('en-GB', { 
+                                day: '2-digit', 
+                                month: 'short', 
+                                year: 'numeric' 
+                            }).replace(/ /g, '.');
+                            
+                            return `
+                                <div class="news-item" onclick="handleNewsClick(${item.id})" title="Click to view details">
+                                    <span class="news-item-number">${String(index + 1).padStart(2, '0')}.</span>
+                                    <span class="news-item-title">${item.title}</span>
+                                    <span class="news-item-date">- ${formattedDate}</span>
+                                </div>
+                            `;
+                        }).join('');
+                        
+                        // Auto-scroll news
+                        let scrollPosition = 0;
+                        const scrollSpeed = 1;
+                        const scrollContainer = newsScroll;
+                        
+                        function autoScroll() {
+                            scrollPosition += scrollSpeed;
+                            if (scrollPosition >= scrollContainer.scrollWidth - scrollContainer.clientWidth) {
+                                scrollPosition = 0;
+                            }
+                            scrollContainer.scrollLeft = scrollPosition;
+                        }
+                        
+                        // Start auto-scroll
+                        setInterval(autoScroll, 50);
+                    } else {
+                        newsSection.style.display = 'none';
+                    }
+                }
+            } catch (err) {
+                console.log('Could not load latest news');
+                document.getElementById('latestNewsSection').style.display = 'none';
+            }
+        }
+
+        // Handle news item click
+        function handleNewsClick(newsId) {
+            // You can implement navigation to a news detail page or show a modal
+            // For now, we'll show an alert with the news details
+            fetch(`/api/news`)
+                .then(response => response.json())
+                .then(newsItems => {
+                    const newsItem = newsItems.find(item => item.id === newsId);
+                    if (newsItem) {
+                        const newsDate = new Date(newsItem.news_date);
+                        const formattedDate = newsDate.toLocaleDateString('en-GB', { 
+                            day: '2-digit', 
+                            month: 'long', 
+                            year: 'numeric' 
+                        });
+                        
+                        alert(`${newsItem.title}\n\n${newsItem.content}\n\nDate: ${formattedDate}`);
+                    }
+                })
+                .catch(err => {
+                    console.error('Failed to load news details:', err);
+                    alert('Failed to load news details');
+                });
+        }
+
+        // Load dynamic content on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadHomeSections();
+            loadFooterLinks();
+            loadLatestNews();
+        });
+        // State
+        let currentFormats = [];
+        let selectedFormat = null;
+        let currentUrl = '';
+        let activeTab = 'combined';
+        let autoFetchTimeout = null;
+        let lastFetchedUrl = '';
+
+        // Elements
+        const form = document.getElementById('videoForm');
+        const urlInput = document.getElementById('videoUrl');
+        const statusBtn = document.getElementById('statusBtn');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const errorMessage = document.getElementById('errorMessage');
+        const videoSection = document.getElementById('videoSection');
+        const videoThumbnail = document.getElementById('videoThumbnail');
+        const videoTitle = document.getElementById('videoTitle');
+        const videoMeta = document.getElementById('videoMeta');
+        const formatsContainer = document.getElementById('formatsContainer');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const formatTabs = document.querySelectorAll('.format-tab');
+
+        // Event Listeners
+        urlInput.addEventListener('input', handleUrlInput);
+        urlInput.addEventListener('paste', handleUrlPaste);
+        form.addEventListener('submit', handleFormSubmit);
+        downloadBtn.addEventListener('click', handleDownload);
+        formatTabs.forEach(tab => tab.addEventListener('click', handleTabClick));
+
+        // URL Input Handler
+        function handleUrlInput(e) {
+            const url = e.target.value.trim();
+            
+            if (autoFetchTimeout) {
+                clearTimeout(autoFetchTimeout);
+            }
+
+            const isValid = isCompleteVideoUrl(url);
+            
+            if (isValid && url !== lastFetchedUrl) {
+                autoFetchTimeout = setTimeout(() => {
+                    currentUrl = url;
+                    lastFetchedUrl = url;
+                    fetchFormats(url, true);
+                }, 300);
+                
+                statusBtn.textContent = '🔍 Detecting video...';
+            } else if (!isValid) {
+                statusBtn.textContent = 'Paste video URL above';
+                lastFetchedUrl = '';
+            }
+        }
+
+        // Paste Handler
+        function handleUrlPaste(e) {
+            setTimeout(() => {
+                const url = urlInput.value.trim();
+                if (isCompleteVideoUrl(url) && url !== lastFetchedUrl) {
+                    currentUrl = url;
+                    lastFetchedUrl = url;
+                    statusBtn.textContent = '🔍 Detecting video...';
+                    setTimeout(() => fetchFormats(url, true), 200);
+                }
+            }, 100);
+        }
+
+        // Form Submit Handler
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            const url = urlInput.value.trim();
+            
+            if (!url) {
+                showError('Please enter a valid video URL');
+                return;
+            }
+
+            currentUrl = url;
+            lastFetchedUrl = url;
+            await fetchFormats(url, false);
+        }
+
+        // Tab Click Handler
+        function handleTabClick(e) {
+            formatTabs.forEach(t => t.classList.remove('active'));
+            e.target.classList.add('active');
+            activeTab = e.target.dataset.tab;
+            renderFormats();
+        }
+
+        // Download Handler
+        async function handleDownload() {
+            if (!selectedFormat) return;
+
+            // Get video info
+            const videoTitle = document.getElementById('videoTitle').textContent;
+            const extension = selectedFormat.ext;
+            const filename = `${videoTitle}.${extension}`;
+            const filesize = selectedFormat.filesize || 0;
+
+            // Build download URL
+            // Pass format_type to ensure audio is merged for "combined" tab
+            const downloadUrl = `/api/download?` + new URLSearchParams({
+                url: currentUrl,
+                format_id: selectedFormat.format_id,
+                title: videoTitle,
+                ext: extension,
+                format_type: activeTab  // Pass the active tab (combined/video/audio)
+            });
+
+            // Show download modal
+            showDownloadModal(filename, filesize);
+
+            // Use XMLHttpRequest for progress tracking
+            const xhr = new XMLHttpRequest();
+            let startTime = Date.now();
+            let lastLoaded = 0;
+            let lastTime = startTime;
+
+            xhr.open('GET', downloadUrl, true);
+            xhr.responseType = 'blob';
+
+            // Track download progress
+            xhr.addEventListener('progress', (e) => {
+                if (e.lengthComputable) {
+                    const percentComplete = (e.loaded / e.total) * 100;
+                    const loadedMB = (e.loaded / (1024 * 1024)).toFixed(2);
+                    const totalMB = (e.total / (1024 * 1024)).toFixed(2);
+
+                    // Calculate speed
+                    const currentTime = Date.now();
+                    const timeDiff = (currentTime - lastTime) / 1000; // seconds
+                    const loadedDiff = e.loaded - lastLoaded;
+                    const speed = loadedDiff / timeDiff / (1024 * 1024); // MB/s
+
+                    lastLoaded = e.loaded;
+                    lastTime = currentTime;
+
+                    // Update UI
+                    updateDownloadProgress(percentComplete, loadedMB, totalMB, speed);
+                } else if (filesize > 0) {
+                    // Estimate based on known filesize
+                    const percentComplete = (e.loaded / filesize) * 100;
+                    const loadedMB = (e.loaded / (1024 * 1024)).toFixed(2);
+                    const totalMB = (filesize / (1024 * 1024)).toFixed(2);
+
+                    const currentTime = Date.now();
+                    const timeDiff = (currentTime - lastTime) / 1000;
+                    const loadedDiff = e.loaded - lastLoaded;
+                    const speed = loadedDiff / timeDiff / (1024 * 1024);
+
+                    lastLoaded = e.loaded;
+                    lastTime = currentTime;
+
+                    updateDownloadProgress(percentComplete, loadedMB, totalMB, speed);
+                } else {
+                    // Show indeterminate progress
+                    const loadedMB = (e.loaded / (1024 * 1024)).toFixed(2);
+                    updateDownloadProgress(null, loadedMB, '??', 0);
+                }
+            });
+
+            // Download complete
+            xhr.addEventListener('load', () => {
+                if (xhr.status === 200) {
+                    // Create blob and download
+                    const blob = xhr.response;
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+
+                    // Show success and close modal
+                    showDownloadSuccess();
+                    setTimeout(() => {
+                        hideDownloadModal();
+                    }, 2000);
+                } else {
+                    showError('Download failed: Server returned error');
+                    hideDownloadModal();
+                }
+            });
+
+            // Download error
+            xhr.addEventListener('error', () => {
+                showError('Download failed: Network error');
+                hideDownloadModal();
+            });
+
+            // Download aborted
+            xhr.addEventListener('abort', () => {
+                showError('Download cancelled');
+                hideDownloadModal();
+            });
+
+            // Start download
+            xhr.send();
+
+            // Store xhr for cancellation
+            window.currentDownload = xhr;
+        }
+
+        // Download Modal Functions
+        function showDownloadModal(filename, filesize) {
+            const modal = document.getElementById('downloadModal');
+            const filenameEl = document.getElementById('downloadFilename');
+            const totalSizeEl = document.getElementById('totalSize');
+
+            filenameEl.textContent = filename;
+            if (filesize > 0) {
+                totalSizeEl.textContent = (filesize / (1024 * 1024)).toFixed(2) + ' MB';
+            } else {
+                totalSizeEl.textContent = '-- MB';
+            }
+
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden'; // Prevent scrolling
+        }
+
+        function hideDownloadModal() {
+            const modal = document.getElementById('downloadModal');
+            modal.classList.remove('show');
+            document.body.style.overflow = ''; // Restore scrolling
+
+            // Reset progress
+            updateDownloadProgress(0, '0', '--', 0);
+
+            // Clear current download
+            window.currentDownload = null;
+        }
+
+        function updateDownloadProgress(percent, loaded, total, speed) {
+            const progressFill = document.getElementById('downloadProgressFill');
+            const progressText = document.getElementById('downloadProgressText');
+            const downloadedSize = document.getElementById('downloadedSize');
+            const totalSize = document.getElementById('totalSize');
+            const downloadSpeed = document.getElementById('downloadSpeed');
+
+            if (percent !== null) {
+                progressFill.style.width = percent.toFixed(1) + '%';
+                progressText.textContent = percent.toFixed(1) + '%';
+            } else {
+                // Indeterminate
+                progressFill.style.width = '100%';
+                progressText.textContent = 'Downloading...';
+            }
+
+            downloadedSize.textContent = loaded + ' MB';
+            if (total !== '??') {
+                totalSize.textContent = total + ' MB';
+            }
+            
+            if (speed > 0) {
+                downloadSpeed.textContent = speed.toFixed(2) + ' MB/s';
+            } else {
+                downloadSpeed.textContent = '-- MB/s';
+            }
+        }
+
+        function showDownloadSuccess() {
+            const modal = document.getElementById('downloadModal');
+            const icon = modal.querySelector('.download-modal-icon');
+            const title = modal.querySelector('.download-modal-title');
+            const cancelBtn = document.getElementById('cancelDownloadBtn');
+
+            icon.textContent = '✅';
+            title.textContent = 'Download Complete!';
+            cancelBtn.style.display = 'none';
+
+            updateDownloadProgress(100, '100', '100', 0);
+        }
+
+        function cancelDownload() {
+            if (window.currentDownload) {
+                window.currentDownload.abort();
+                window.currentDownload = null;
+            }
+            hideDownloadModal();
+        }
+
+        // Fetch Formats
+        async function fetchFormats(url, isAutoFetch = false) {
+            hideError();
+            
+            if (isAutoFetch) {
+                statusBtn.textContent = '⏳ Loading formats...';
+                statusBtn.disabled = true;
+            } else {
+                hideVideoSection();
+                showLoading();
+                statusBtn.disabled = true;
+            }
+
+            try {
+                const response = await fetch('/api/formats', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    if (isAutoFetch) {
+                        statusBtn.textContent = '❌ Failed to detect';
+                        statusBtn.disabled = false;
+                        setTimeout(() => {
+                            statusBtn.textContent = 'Paste video URL above';
+                            statusBtn.disabled = false;
+                        }, 2000);
+                    } else {
+                        throw new Error(data.error || data.detail || 'Failed to fetch formats');
+                    }
+                    return;
+                }
+
+                if (data.success) {
+                    currentFormats = data.formats;
+                    displayVideoInfo(data);
+                    renderFormats();
+                    showVideoSection();
+                    
+                    if (isAutoFetch) {
+                        const count = data.formats.length;
+                        statusBtn.textContent = `✓ ${count} formats detected!`;
+                        statusBtn.disabled = false;
+                        setTimeout(() => {
+                            statusBtn.textContent = '🔄 Refresh formats';
+                            statusBtn.disabled = false;
+                        }, 3000);
+                    } else {
+                        statusBtn.textContent = '🔄 Refresh formats';
+                        statusBtn.disabled = false;
+                    }
+                } else {
+                    if (!isAutoFetch) {
+                        throw new Error(data.error || 'Unknown error');
+                    } else {
+                        statusBtn.textContent = 'Paste video URL above';
+                        statusBtn.disabled = false;
+                    }
+                }
+            } catch (err) {
+                if (!isAutoFetch) {
+                    showError(err.message);
+                    statusBtn.textContent = '🔄 Try again';
+                } else {
+                    // Silent fail for auto-fetch
+                    statusBtn.textContent = 'Paste video URL above';
+                }
+                statusBtn.disabled = false;
+            } finally {
+                hideLoading();
+                statusBtn.disabled = false;
+            }
+        }
+
+        // Display Video Info
+        function displayVideoInfo(data) {
+            videoTitle.textContent = data.title;
+
+            if (data.thumbnail) {
+                videoThumbnail.src = data.thumbnail;
+                videoThumbnail.style.display = 'block';
+            } else {
+                videoThumbnail.style.display = 'none';
+            }
+
+            let metaHTML = '';
+            if (data.duration) {
+                metaHTML += `<div class="meta-item">⏱️ ${formatDuration(data.duration)}</div>`;
+            }
+            if (data.uploader) {
+                metaHTML += `<div class="meta-item">👤 ${data.uploader}</div>`;
+            }
+            if (data.view_count) {
+                metaHTML += `<div class="meta-item">👁️ ${formatNumber(data.view_count)} views</div>`;
+            }
+            videoMeta.innerHTML = metaHTML;
+            
+            // Update tab labels with format counts
+            updateTabCounts();
+        }
+        
+        // Update tab counts
+        function updateTabCounts() {
+            const combinedCount = currentFormats.filter(f => f.format_type === 'combined').length;
+            const videoCount = currentFormats.filter(f => f.format_type === 'video').length;
+            const audioCount = currentFormats.filter(f => f.format_type === 'audio').length;
+            
+            formatTabs.forEach(tab => {
+                const type = tab.dataset.tab;
+                let count = 0;
+                let label = '';
+                
+                if (type === 'combined') {
+                    count = combinedCount;
+                    label = 'Video + Audio';
+                } else if (type === 'video') {
+                    count = videoCount;
+                    label = 'Video Only';
+                } else if (type === 'audio') {
+                    count = audioCount;
+                    label = 'Audio Only';
+                }
+                
+                // Update tab text with count badge
+                if (count > 0) {
+                    tab.innerHTML = `${label} <span style="background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 12px; font-size: 12px; margin-left: 5px;">${count}</span>`;
+                } else {
+                    tab.innerHTML = `${label} <span style="opacity: 0.5; font-size: 12px; margin-left: 5px;">(0)</span>`;
+                }
+            });
+        }
+
+        // Render Formats
+        function renderFormats() {
+            const filtered = currentFormats.filter(f => f.format_type === activeTab);
+            
+            if (filtered.length === 0) {
+                // Check if there are formats in other tabs
+                const videoFormats = currentFormats.filter(f => f.format_type === 'video').length;
+                const audioFormats = currentFormats.filter(f => f.format_type === 'audio').length;
+                const combinedFormats = currentFormats.filter(f => f.format_type === 'combined').length;
+                
+                let message = 'No formats available in this category';
+                let suggestion = '';
+                
+                if (activeTab === 'combined' && (videoFormats > 0 || audioFormats > 0)) {
+                    message = 'No combined (video+audio) formats available';
+                    suggestion = `<p style="margin-top: 10px; color: #666;">This video uses separate streams. Try:<br/>
+                        ${videoFormats > 0 ? `✓ <strong>Video Only</strong> (${videoFormats} formats available)<br/>` : ''}
+                        ${audioFormats > 0 ? `✓ <strong>Audio Only</strong> (${audioFormats} formats available)` : ''}
+                    </p>`;
+                    
+                    // Auto-switch to video tab if available
+                    if (videoFormats > 0) {
+                        setTimeout(() => {
+                            activeTab = 'video';
+                            formatTabs.forEach(t => {
+                                t.classList.remove('active');
+                                if (t.dataset.tab === 'video') {
+                                    t.classList.add('active');
+                                }
+                            });
+                            renderFormats();
+                        }, 1500);
+                    }
+                } else if (activeTab === 'video' && videoFormats === 0 && combinedFormats > 0) {
+                    suggestion = `<p style="margin-top: 10px; color: #666;">Try the <strong>Video + Audio</strong> tab for ${combinedFormats} combined formats</p>`;
+                } else if (activeTab === 'audio' && audioFormats === 0 && combinedFormats > 0) {
+                    suggestion = `<p style="margin-top: 10px; color: #666;">Try the <strong>Video + Audio</strong> tab for ${combinedFormats} combined formats</p>`;
+                }
+                
+                formatsContainer.innerHTML = `
+                    <div class="no-formats">
+                        <div class="no-formats-icon">📭</div>
+                        <div>${message}</div>
+                        ${suggestion}
+                    </div>
+                `;
+                downloadBtn.classList.remove('show');
+                return;
+            }
+
+            filtered.sort((a, b) => {
+                const aSize = a.filesize || a.filesize_approx || 0;
+                const bSize = b.filesize || b.filesize_approx || 0;
+                return bSize - aSize;
+            });
+
+            formatsContainer.innerHTML = filtered.map(format => {
+                const fileSize = format.filesize || format.filesize_approx;
+                const specs = [];
+
+                if (format.resolution) specs.push(format.resolution);
+                if (format.ext) specs.push(format.ext.toUpperCase());
+                if (fileSize) specs.push(formatBytes(fileSize));
+                if (format.tbr) specs.push(`${Math.round(format.tbr)}kbps`);
+                if (format.fps) specs.push(`${format.fps}fps`);
+
+                return `
+                    <div class="format-item" data-format-id="${format.format_id}">
+                        <div class="format-info">
+                            <div class="format-header">
+                                <span class="format-badge ${format.format_type}">${format.format_type}</span>
+                                <span class="format-quality">${format.quality}</span>
+                            </div>
+                            <div class="format-specs">
+                                ${specs.map(s => `<span>${s}</span>`).join(' • ')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.querySelectorAll('.format-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    document.querySelectorAll('.format-item').forEach(i => i.classList.remove('selected'));
+                    item.classList.add('selected');
+                    
+                    const formatId = item.dataset.formatId;
+                    selectedFormat = currentFormats.find(f => f.format_id === formatId);
+                    downloadBtn.classList.add('show');
+                });
+            });
+        }
+
+        // URL Validation
+        function isCompleteVideoUrl(url) {
+            if (!url || (!url.startsWith('http://') && !url.startsWith('https://'))) {
+                return false;
+            }
+            
+            const patterns = [
+                /youtube\.com\/watch\?v=[\w-]+/,
+                /youtu\.be\/[\w-]+/,
+                /youtube\.com\/shorts\/[\w-]+/,
+                /vimeo\.com\/\d+/,
+                /dailymotion\.com\/video\/[\w-]+/,
+                /tiktok\.com\/@[\w.-]+\/video\/\d+/,
+                /instagram\.com\/(p|reel|reels)\/[\w-]+/,
+                /twitter\.com\/[\w]+\/status\/\d+/,
+                /x\.com\/[\w]+\/status\/\d+/,
+                /facebook\.com\/.*\/videos\/\d+/,
+                /twitch\.tv\/videos\/\d+/,
+            ];
+            
+            return patterns.some(pattern => pattern.test(url));
+        }
+
+        // UI Helpers
+        function showLoading() {
+            loadingOverlay.classList.add('show');
+        }
+
+        function hideLoading() {
+            loadingOverlay.classList.remove('show');
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.add('show');
+        }
+
+        function hideError() {
+            errorMessage.classList.remove('show');
+        }
+
+        function showVideoSection() {
+            videoSection.classList.add('active');
+        }
+
+        function hideVideoSection() {
+            videoSection.classList.remove('active');
+            downloadBtn.classList.remove('show');
+            selectedFormat = null;
+        }
+
+        // Format Helpers
+        function formatDuration(seconds) {
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            const s = Math.floor(seconds % 60);
+            
+            if (h > 0) {
+                return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+            }
+            return `${m}:${s.toString().padStart(2, '0')}`;
+        }
+
+        function formatBytes(bytes) {
+            if (!bytes) return 'Unknown';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+        }
+
+        function formatNumber(num) {
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+            return num.toString();
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Cancel download button
+            const cancelDownloadBtn = document.getElementById('cancelDownloadBtn');
+            if (cancelDownloadBtn) {
+                cancelDownloadBtn.addEventListener('click', cancelDownload);
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="pageTitle">Page - Video Downloader</title>
+    <meta id="pageMetaDesc" name="description" content="">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8f9fa;
+            color: #212529;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 36px;
+            font-weight: 700;
+        }
+
+        .header a {
+            color: white;
+            text-decoration: none;
+            opacity: 0.9;
+            font-size: 14px;
+            margin-top: 10px;
+            display: inline-block;
+        }
+
+        .header a:hover {
+            opacity: 1;
+            text-decoration: underline;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .page-card {
+            background: white;
+            border-radius: 16px;
+            padding: 50px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .page-content {
+            font-size: 16px;
+            line-height: 1.8;
+        }
+
+        .page-content h1 {
+            font-size: 32px;
+            margin-bottom: 20px;
+            color: #212529;
+        }
+
+        .page-content h2 {
+            font-size: 26px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            color: #212529;
+        }
+
+        .page-content h3 {
+            font-size: 22px;
+            margin-top: 25px;
+            margin-bottom: 12px;
+            color: #495057;
+        }
+
+        .page-content p {
+            margin-bottom: 15px;
+        }
+
+        .page-content ul, .page-content ol {
+            margin-left: 30px;
+            margin-bottom: 15px;
+        }
+
+        .page-content li {
+            margin-bottom: 8px;
+        }
+
+        .page-content a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .page-content a:hover {
+            text-decoration: underline;
+        }
+
+        .page-content blockquote {
+            border-left: 4px solid #667eea;
+            padding-left: 20px;
+            margin: 20px 0;
+            color: #6c757d;
+            font-style: italic;
+        }
+
+        .page-content code {
+            background: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+
+        .page-content pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        .page-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 100px 20px;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            text-align: center;
+            padding: 100px 20px;
+            color: #dc3545;
+        }
+
+        .footer {
+            background: #212529;
+            color: #adb5bd;
+            padding: 40px 20px;
+            text-align: center;
+            margin-top: 80px;
+        }
+
+        .footer a {
+            color: #adb5bd;
+            text-decoration: none;
+            margin: 0 15px;
+            font-size: 14px;
+        }
+
+        .footer a:hover {
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .page-card {
+                padding: 30px 25px;
+            }
+
+            .header h1 {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1 id="pageHeading"></h1>
+        <a href="/">← Back to Home</a>
+    </div>
+
+    <div class="container">
+        <div class="page-card">
+            <div id="loadingState" class="loading">
+                <div class="spinner"></div>
+                <p>Loading page...</p>
+            </div>
+
+            <div id="errorState" class="error" style="display: none;">
+                <h2>Page Not Found</h2>
+                <p>The page you're looking for doesn't exist or has been removed.</p>
+                <a href="/" style="color: #667eea;">Go back to home</a>
+            </div>
+
+            <div id="pageContent" class="page-content" style="display: none;"></div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div id="footerLinks"></div>
+        <p style="margin-top: 20px; opacity: 0.7;">© 2025 Video Downloader. All rights reserved.</p>
+    </div>
+
+    <script>
+        async function loadPage() {
+            const slug = window.location.pathname.split('/').pop();
+            
+            try {
+                const response = await fetch(`/page/${slug}`);
+                
+                if (!response.ok) {
+                    throw new Error('Page not found');
+                }
+
+                const page = await response.json();
+                
+                // Update meta tags
+                document.getElementById('pageTitle').textContent = page.title + ' - Video Downloader';
+                if (page.meta_description) {
+                    document.getElementById('pageMetaDesc').content = page.meta_description;
+                }
+                
+                // Display page
+                document.getElementById('pageHeading').textContent = page.title;
+                document.getElementById('pageContent').innerHTML = page.content;
+                
+                // Show content, hide loading
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('pageContent').style.display = 'block';
+                
+            } catch (err) {
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('errorState').style.display = 'block';
+            }
+        }
+
+        async function loadFooterLinks() {
+            try {
+                const response = await fetch('/api/admin/pages');
+                if (response.ok) {
+                    const pages = await response.json();
+                    const footerLinks = document.getElementById('footerLinks');
+                    
+                    const publishedPages = pages.filter(p => p.is_published);
+                    const links = publishedPages.map(page => 
+                        `<a href="/pages/${page.slug}">${page.title}</a>`
+                    ).join('');
+                    
+                    footerLinks.innerHTML = `<a href="/">Home</a>${links}`;
+                }
+            } catch (err) {
+                console.log('Could not load footer links');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadPage();
+            loadFooterLinks();
+        });
+    </script>
+</body>
+</html>
+

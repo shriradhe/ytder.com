@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Admin Dashboard - Video Downloader</title>
+
+    <!-- Google Font: Source Sans Pro -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- AdminLTE -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
+    <!-- Quill Editor -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        /* Emoji Picker Styles */
+        .emoji-picker-container {
+            margin-bottom: 10px;
+        }
+        .emoji-picker-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 8px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .emoji-picker-grid::-webkit-scrollbar {
+            width: 6px;
+        }
+        .emoji-picker-grid::-webkit-scrollbar-thumb {
+            background: #adb5bd;
+            border-radius: 3px;
+        }
+        .emoji-item {
+            font-size: 24px;
+            padding: 8px;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            background: white;
+        }
+        .emoji-item:hover {
+            background: #e9ecef;
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body class="hold-transition sidebar-mini layout-fixed">
+<div class="wrapper">
+
+    <!-- Navbar -->
+    <nav class="main-header navbar navbar-expand navbar-white navbar-light">
+        <!-- Left navbar links -->
+        <ul class="navbar-nav">
+            <li class="nav-item">
+                <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
+            </li>
+        </ul>
+
+        <!-- Right navbar links -->
+        <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+                <a class="nav-link" href="#" onclick="logout(); return false;">
+                    <i class="fas fa-sign-out-alt"></i>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Main Sidebar Container -->
+    <aside class="main-sidebar sidebar-dark-primary elevation-4">
+        <!-- Brand Logo -->
+        <a href="#" class="brand-link">
+            <i class="fas fa-video brand-image" style="font-size: 28px; margin-right: 10px;"></i>
+            <span class="brand-text font-weight-light">Admin Panel</span>
+        </a>
+
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <!-- Sidebar user panel -->
+            <div class="user-panel mt-3 pb-3 mb-3 d-flex">
+                <div class="image">
+                    <div class="img-circle elevation-2" style="width: 40px; height: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;" id="adminAvatar">A</div>
+                </div>
+                <div class="info">
+                    <a href="#" class="d-block" id="adminName">Admin</a>
+                </div>
+            </div>
+
+            <!-- Sidebar Menu -->
+            <nav class="mt-2">
+                <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link active" data-section="dashboard" onclick="switchSection('dashboard'); return false;">
+                            <i class="nav-icon fas fa-tachometer-alt"></i>
+                            <p>Dashboard</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-section="pages" onclick="switchSection('pages'); return false;">
+                            <i class="nav-icon fas fa-file-alt"></i>
+                            <p>Pages</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-section="home-sections" onclick="switchSection('home-sections'); return false;">
+                            <i class="nav-icon fas fa-th-large"></i>
+                            <p>Home Sections</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-section="news" onclick="switchSection('news'); return false;">
+                            <i class="nav-icon fas fa-newspaper"></i>
+                            <p>Latest News</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-section="analytics" onclick="switchSection('analytics'); return false;">
+                            <i class="nav-icon fas fa-chart-pie"></i>
+                            <p>Analytics</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-section="seo" onclick="switchSection('seo'); return false;">
+                            <i class="nav-icon fas fa-search"></i>
+                            <p>SEO Settings</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-section="settings" onclick="switchSection('settings'); return false;">
+                            <i class="nav-icon fas fa-cog"></i>
+                            <p>Settings</p>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </aside>
+
+    <!-- Content Wrapper -->
+    <div class="content-wrapper">
+        <!-- Content Header -->
+        <div class="content-header">
+            <div class="container-fluid">
+                <div class="row mb-2">
+                    <div class="col-sm-6">
+                        <h1 class="m-0" id="pageTitle">Dashboard</h1>
+                    </div>
+                    <div class="col-sm-6">
+                        <ol class="breadcrumb float-sm-right">
+                            <li class="breadcrumb-item"><a href="#">Home</a></li>
+                            <li class="breadcrumb-item active" id="breadcrumbActive">Dashboard</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main content -->
+        <section class="content">
+            <div class="container-fluid">
+                
+                <!-- Dashboard Section -->
+                <div class="content-section" id="dashboard-section">
+                    <!-- Stats Row -->
+                    <div class="row" id="statsGrid">
+                        <!-- Stats will be loaded dynamically -->
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3 class="card-title">Quick Actions</h3>
+                                </div>
+                                <div class="card-body">
+                                    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                                        <button class="btn btn-primary" onclick="switchSection('pages')">
+                                            <i class="fas fa-plus"></i> Add New Page
+                                        </button>
+                                        <button class="btn btn-primary" onclick="switchSection('home-sections')">
+                                            <i class="fas fa-plus"></i> Add Home Section
+                                        </button>
+                                        <button class="btn btn-success" onclick="createBackup()">
+                                            <i class="fas fa-database"></i> Backup Database
+                                        </button>
+                                        <button class="btn btn-secondary" onclick="window.open('/', '_blank')">
+                                            <i class="fas fa-eye"></i> View Site
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Daily Traffic Chart -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3 class="card-title">Daily Traffic (Last 7 Days)</h3>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="trafficChart" style="height: 300px;"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pages Section -->
+                <div class="content-section" id="pages-section" style="display: none;">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3 class="card-title">Pages Management</h3>
+                                    <div class="card-tools">
+                                        <button class="btn btn-primary btn-sm" onclick="openPageModal()">
+                                            <i class="fas fa-plus"></i> Add New Page
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div id="pagesTable"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Home Sections Section -->
+                <div class="content-section" id="home-sections-section" style="display: none;">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3 class="card-title">Home Page Sections</h3>
+                                    <div class="card-tools">
+                                        <button class="btn btn-primary btn-sm" onclick="openSectionModal()">
+                                            <i class="fas fa-plus"></i> Add New Section
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div id="sectionsTable"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analytics Section -->
+                <div class="content-section" id="analytics-section" style="display: none;">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3 class="card-title">Monthly Statistics (Last 6 Months)</h3>
+                                </div>
+                                <div class="card-body">
+                                    <div style="height: 400px; position: relative;">
+                                        <canvas id="monthlyChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3 class="card-title">Daily Activity</h3>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="dailyChart" style="height: 300px;"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SEO Section -->
+                <div class="content-section" id="seo-section" style="display: none;">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3 class="card-title">SEO Settings</h3>
+                                    <div class="card-tools">
+                                        <button class="btn btn-info btn-sm" onclick="loadSeoHistory()">
+                                            <i class="fas fa-history"></i> View History
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <form id="seoForm" onsubmit="saveSeoSettings(event)">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label>Page Title <span class="text-danger">*</span></label>
+                                                    <input type="text" class="form-control" id="seoPageTitle" required maxlength="200" placeholder="Video Downloader - Download HD Videos">
+                                                    <small class="form-text text-muted">Appears in browser tab and search results (50-60 chars recommended)</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label>Meta Keywords</label>
+                                                    <input type="text" class="form-control" id="seoMetaKeywords" maxlength="500" placeholder="video downloader, youtube, instagram">
+                                                    <small class="form-text text-muted">Comma-separated keywords</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="form-group">
+                                            <label>Meta Description <span class="text-danger">*</span></label>
+                                            <textarea class="form-control" id="seoMetaDescription" rows="3" required maxlength="500" placeholder="Download high-quality videos from YouTube, Instagram, TikTok, and more..."></textarea>
+                                            <small class="form-text text-muted">Appears in search results (150-160 chars recommended)</small>
+                                        </div>
+
+                                        <div class="card card-primary card-outline collapsed-card">
+                                            <div class="card-header">
+                                                <h3 class="card-title">Open Graph (Facebook, LinkedIn)</h3>
+                                                <div class="card-tools">
+                                                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                                        <i class="fas fa-plus"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="form-group">
+                                                    <label>OG Title</label>
+                                                    <input type="text" class="form-control" id="seoOgTitle" maxlength="200">
+                                                    <small class="form-text text-muted">Leave empty to use page title</small>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label>OG Description</label>
+                                                    <textarea class="form-control" id="seoOgDescription" rows="2"></textarea>
+                                                    <small class="form-text text-muted">Leave empty to use meta description</small>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label>OG Image URL</label>
+                                                    <input type="url" class="form-control" id="seoOgImage" maxlength="500" placeholder="https://example.com/image.jpg">
+                                                    <small class="form-text text-muted">Recommended: 1200x630px</small>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label>OG URL</label>
+                                                    <input type="url" class="form-control" id="seoOgUrl" maxlength="500" placeholder="https://example.com">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="card card-info card-outline collapsed-card">
+                                            <div class="card-header">
+                                                <h3 class="card-title">Twitter Card</h3>
+                                                <div class="card-tools">
+                                                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                                        <i class="fas fa-plus"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="form-group">
+                                                    <label>Twitter Card Type</label>
+                                                    <select class="form-control" id="seoTwitterCard">
+                                                        <option value="summary">Summary</option>
+                                                        <option value="summary_large_image" selected>Summary Large Image</option>
+                                                    </select>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label>Twitter Title</label>
+                                                    <input type="text" class="form-control" id="seoTwitterTitle" maxlength="200">
+                                                    <small class="form-text text-muted">Leave empty to use page title</small>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label>Twitter Description</label>
+                                                    <textarea class="form-control" id="seoTwitterDescription" rows="2"></textarea>
+                                                    <small class="form-text text-muted">Leave empty to use meta description</small>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label>Twitter Image URL</label>
+                                                    <input type="url" class="form-control" id="seoTwitterImage" maxlength="500" placeholder="https://example.com/image.jpg">
+                                                    <small class="form-text text-muted">Recommended: 1200x600px</small>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label>Canonical URL</label>
+                                            <input type="url" class="form-control" id="seoCanonicalUrl" maxlength="500" placeholder="https://example.com">
+                                            <small class="form-text text-muted">Preferred URL for this page</small>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label>Robots Meta</label>
+                                            <input type="text" class="form-control" id="seoRobots" value="index, follow" maxlength="100">
+                                            <small class="form-text text-muted">e.g., "index, follow" or "noindex, nofollow"</small>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <div class="form-check">
+                                                <input type="checkbox" class="form-check-input" id="seoIsActive" checked>
+                                                <label class="form-check-label" for="seoIsActive">Active (Apply these SEO settings)</label>
+                                            </div>
+                                        </div>
+
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-save"></i> Save SEO Settings
+                                        </button>
+                                        <button type="button" class="btn btn-secondary" onclick="loadSeoSettings()">
+                                            <i class="fas fa-sync"></i> Reload
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- News Section -->
+                <div class="content-section" id="news-section" style="display: none;">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3 class="card-title">Latest News Management</h3>
+                                    <div class="card-tools">
+                                        <button class="btn btn-primary btn-sm" onclick="openNewsModal()">
+                                            <i class="fas fa-plus"></i> Add New News
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div id="newsTable"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Section -->
+                <div class="content-section" id="settings-section" style="display: none;">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3 class="card-title">Change Password</h3>
+                                </div>
+                                <div class="card-body">
+                                    <form id="passwordForm" onsubmit="changePassword(event)">
+                                        <div class="form-group">
+                                            <label>Current Password</label>
+                                            <input type="password" class="form-control" id="oldPassword" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>New Password</label>
+                                            <input type="password" class="form-control" id="newPassword" required minlength="6">
+                                        </div>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-save"></i> Update Password
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3 class="card-title">Database Backup & Restore</h3>
+                                </div>
+                                <div class="card-body">
+                                    <p style="margin-bottom: 15px; color: #666;">Create a backup of your database. Backups are stored in the 'backups' folder. You can restore from any backup listed below.</p>
+                                    <button class="btn btn-success" onclick="createBackup()">
+                                        <i class="fas fa-database"></i> Create Backup Now
+                                    </button>
+                                    
+                                    <div id="backupsList" class="mt-3"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+    </div>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+        <strong>Copyright &copy; 2025 <a href="#">Video Downloader</a>.</strong>
+        All rights reserved.
+        <div class="float-right d-none d-sm-inline-block">
+            <b>Version</b> 1.0.0
+        </div>
+    </footer>
+</div>
+
+<!-- Page Modal -->
+<div class="modal fade" id="pageModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="pageModalTitle">Add New Page</h4>
+                <button type="button" class="close" data-dismiss="modal" onclick="closePageModal()">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form id="pageForm" onsubmit="savePage(event)">
+                <div class="modal-body">
+                    <input type="hidden" id="pageId">
+                    <div class="form-group">
+                        <label>Page Title</label>
+                        <input type="text" class="form-control" id="pageTitleInput" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Slug (URL-friendly)</label>
+                        <input type="text" class="form-control" id="pageSlug" required placeholder="Auto-generated from title">
+                        <small class="form-text text-muted">Slug will be auto-generated from title if left empty</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Content</label>
+                        <div id="pageEditor" style="height: 300px;"></div>
+                        <textarea id="pageContent" style="display: none;"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="pagePublished" checked>
+                            <label class="form-check-label" for="pagePublished">Published</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="closePageModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Save Page
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Section Modal -->
+<div class="modal fade" id="sectionModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="sectionModalTitle">Add New Section</h4>
+                <button type="button" class="close" data-dismiss="modal" onclick="closeSectionModal()">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form id="sectionForm" onsubmit="saveSection(event)">
+                <div class="modal-body">
+                    <input type="hidden" id="sectionId">
+                    <div class="form-group">
+                        <label>Title</label>
+                        <input type="text" class="form-control" id="sectionTitle" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea class="form-control" id="sectionDescription" rows="3" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Icon (Emoji)</label>
+                        <div class="emoji-picker-container">
+                            <div class="emoji-picker-grid" id="emojiPickerGrid">
+                                <!-- Emojis will be populated by JavaScript -->
+                            </div>
+                            <input type="text" class="form-control" id="sectionIcon" placeholder="🎬" required>
+                            <small class="form-text text-muted">Click an emoji above or type your own</small>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Link (Optional)</label>
+                        <input type="url" class="form-control" id="sectionLink" placeholder="https://example.com">
+                        <small class="form-text text-muted">When users click this section, it will open this link</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Display Order</label>
+                        <input type="number" class="form-control" id="sectionOrder" value="0">
+                    </div>
+                    <div class="form-group">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="sectionActive" checked>
+                            <label class="form-check-label" for="sectionActive">Active</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="closeSectionModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Save Section
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- News Modal -->
+<div class="modal fade" id="newsModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="newsModalTitle">Add New News</h4>
+                <button type="button" class="close" data-dismiss="modal" onclick="closeNewsModal()">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form id="newsForm" onsubmit="saveNews(event)">
+                <div class="modal-body">
+                    <input type="hidden" id="newsId">
+                    <div class="form-group">
+                        <label>Title</label>
+                        <input type="text" class="form-control" id="newsTitle" required maxlength="500">
+                    </div>
+                    <div class="form-group">
+                        <label>Content</label>
+                        <textarea class="form-control" id="newsContent" rows="4" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>News Date</label>
+                        <input type="date" class="form-control" id="newsDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Display Order</label>
+                        <input type="number" class="form-control" id="newsOrder" value="0">
+                    </div>
+                    <div class="form-group">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="newsActive" checked>
+                            <label class="form-check-label" for="newsActive">Active</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="closeNewsModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Save News
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Bootstrap 4 -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+<!-- AdminLTE App -->
+<script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+<!-- Quill Editor -->
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+<!-- Custom Dashboard JS -->
+<script src="/static/admin/dashboard.js"></script>
+
+</body>
+</html>

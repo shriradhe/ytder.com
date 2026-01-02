@@ -1,0 +1,11 @@
+include README.md
+include LICENSE
+include requirements.txt
+include .env.example
+include pyproject.toml
+recursive-include static *
+recursive-include docs *.md
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]
+recursive-exclude * .DS_Store
+
