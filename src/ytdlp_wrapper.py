@@ -48,10 +48,8 @@ def _get_youtube_options(player_client: str = "ios") -> list:
     ])
     
     # Additional YouTube-specific options
-    options.extend([
-        "--no-check-age",  # Don't check video age
-        "--extractor-retries", "3",  # Retry on failures
-    ])
+    # Note: --no-check-age and --extractor-retries are not valid yt-dlp options
+    # yt-dlp handles retries automatically, no need to specify
     
     # Optional: Support cookies from environment variable
     cookies_path = os.getenv("YOUTUBE_COOKIES_FILE")
