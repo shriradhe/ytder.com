@@ -12,6 +12,44 @@ from .config import settings
 logger = logging.getLogger(__name__)
 
 
+def _get_base_options() -> list:
+    """
+    Get base options that apply to all requests (proxy, cookies).
+    
+    Returns:
+        List of command-line arguments for yt-dlp
+    """
+    options = []
+    
+    # Add proxy if configured (for geo-blocking bypass)
+    if settings.proxy:
+        options.extend(["--proxy", settings.proxy])
+        logger.info(f"Using proxy: {settings.proxy[:50]}..." if len(settings.proxy) > 50 else f"Using proxy: {settings.proxy}")
+    
+    # Automatically use cookies file if configured
+    if settings.cookies_file and os.path.exists(settings.cookies_file):
+        options.extend(["--cookies", settings.cookies_file])
+        logger.info(f"Using cookies from: {settings.cookies_file}")
+    elif settings.cookies_file:
+        logger.warning(f"Cookies file specified but not found: {settings.cookies_file}")
+    
+    return options
+
+
+def _get_generic_options() -> list:
+    """
+    Get generic options for non-YouTube URLs (includes proxy, cookies, user-agent).
+    
+    Returns:
+        List of command-line arguments for yt-dlp
+    """
+    options = _get_base_options()
+    options.extend([
+        "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    ])
+    return options
+
+
 def _get_youtube_options(player_client: str = "ios") -> list:
     """
     Get YouTube-specific options to bypass bot detection.
@@ -23,7 +61,11 @@ def _get_youtube_options(player_client: str = "ios") -> list:
     Returns:
         List of command-line arguments for yt-dlp
     """
-    options = [
+    # Start with base options (proxy, cookies)
+    options = _get_base_options()
+    
+    # Add YouTube-specific headers
+    options.extend([
         "--user-agent", "Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1",
         "--referer", "https://www.youtube.com/",
         "--add-header", "Accept:text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
@@ -34,7 +76,7 @@ def _get_youtube_options(player_client: str = "ios") -> list:
         "--add-header", "Sec-Fetch-Site:none",
         "--add-header", "Sec-Fetch-User:?1",
         "--add-header", "Upgrade-Insecure-Requests:1",
-    ]
+    ])
     
     # Add YouTube extractor args - try different player clients
     # iOS client is often most reliable for bypassing bot detection
@@ -47,20 +89,6 @@ def _get_youtube_options(player_client: str = "ios") -> list:
         "--extractor-args", f"youtube:{','.join(youtube_extractor_args)}"
     ])
     
-    # Additional YouTube-specific options
-    # Note: --no-check-age and --extractor-retries are not valid yt-dlp options
-    # yt-dlp handles retries automatically, no need to specify
-    
-    # Optional: Support cookies from environment variable
-    cookies_path = os.getenv("YOUTUBE_COOKIES_FILE")
-    if cookies_path and os.path.exists(cookies_path):
-        options.extend(["--cookies", cookies_path])
-        logger.info(f"Using cookies from: {cookies_path}")
-    # Note: Removed automatic --cookies-from-browser chrome fallback
-    # This was causing errors on Render.com where Chrome is not installed.
-    # To use browser cookies, explicitly set YOUTUBE_COOKIES_FILE environment variable
-    # with the path to an exported cookies.txt file.
-    
     return options
 
 
@@ -71,7 +99,15 @@ class YtDlpWrapper:
         """Initialize the wrapper with a semaphore for concurrency control."""
         self._semaphore = asyncio.Semaphore(settings.max_concurrent_downloads)
         self._active_processes = 0
+        
+        # Log configuration
         logger.info(f"YtDlpWrapper initialized with max {settings.max_concurrent_downloads} concurrent processes")
+        if settings.proxy:
+            logger.info(f"Proxy enabled: {settings.proxy[:50]}..." if len(settings.proxy) > 50 else f"Proxy enabled: {settings.proxy}")
+        if settings.cookies_file and os.path.exists(settings.cookies_file):
+            logger.info(f"Cookies enabled: {settings.cookies_file}")
+        elif settings.cookies_file:
+            logger.warning(f"Cookies file specified but not found: {settings.cookies_file}")
     
     async def get_formats(self, url: str) -> Dict[str, Any]:
         """
@@ -119,10 +155,8 @@ class YtDlpWrapper:
                             cmd.extend(_get_youtube_options(player_client=client))
                             logger.info(f"Trying YouTube with player_client={client}")
                         else:
-                            # For non-YouTube URLs, use basic options
-                            cmd.extend([
-                                "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-                            ])
+                            # For non-YouTube URLs, use generic options (includes proxy, cookies)
+                            cmd.extend(_get_generic_options())
                         cmd.append(url)
                         
                         # Execute yt-dlp as async subprocess
@@ -284,9 +318,8 @@ class YtDlpWrapper:
                                 cmd.extend(_get_youtube_options(player_client=client))
                                 logger.info(f"Trying YouTube metadata extraction with player_client={client}")
                             else:
-                                cmd.extend([
-                                    "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-                                ])
+                                # For non-YouTube URLs, use generic options (includes proxy, cookies)
+                                cmd.extend(_get_generic_options())
                             
                             if format_id:
                                 cmd.extend(["-f", f"{format_id}"])

@@ -36,6 +36,11 @@ ytder_python_backend/
 - **Memory Efficient**: Metadata only, no video file storage
 - **Rate Limiting**: Per-IP request throttling
 
+### Advanced Features
+- **Proxy Support**: Route requests through HTTP/HTTPS/SOCKS proxies for geo-blocking bypass
+- **Automatic Cookies**: Use cookies file for all requests (access age-restricted/private content)
+- **Multi-platform Support**: YouTube, Instagram, Facebook, TikTok, and 8+ more platforms
+
 ### Architecture
 ```
 ┌─────────────────┐
@@ -77,7 +82,15 @@ MAX_CONCURRENT_DOWNLOADS=10
 CACHE_TTL_SECONDS=3600
 RATE_LIMIT_PER_MINUTE=30
 YTDLP_TIMEOUT_SECONDS=60
+
+# Proxy for geo-blocking bypass (optional)
+PROXY=socks5://proxy.example.com:1080
+
+# Cookies file for authentication (optional)
+COOKIES_FILE=/path/to/cookies.txt
 ```
+
+**See [docs/PROXY_AND_COOKIES.md](docs/PROXY_AND_COOKIES.md) for detailed proxy and cookies configuration.**
 
 ## 🏃 Usage
 
@@ -151,6 +164,10 @@ Edit `src/config.py` or create `.env` file in the project root:
 | `CACHE_MAX_SIZE` | 1000 | Maximum cached items |
 | `RATE_LIMIT_PER_MINUTE` | 30 | Requests per IP per minute |
 | `YTDLP_TIMEOUT_SECONDS` | 60 | Max yt-dlp execution time |
+| `PROXY` | None | Proxy URL (http/https/socks4/socks5) for geo-blocking bypass |
+| `COOKIES_FILE` | None | Path to cookies.txt file for authentication |
+
+**📖 For detailed proxy and cookies setup, see [docs/PROXY_AND_COOKIES.md](docs/PROXY_AND_COOKIES.md)**
 
 ## 🔥 Performance Characteristics
 
@@ -188,6 +205,7 @@ Use `/api/health` endpoint to monitor:
 - **Project Structure**: See [PROJECT_SUMMARY.md](PROJECT_SUMMARY.md) for complete project organization
 - **Admin Panel**: See [docs/ADMIN_PANEL_GUIDE.md](docs/ADMIN_PANEL_GUIDE.md)
 - **Advanced Features**: See [docs/ADVANCED_FEATURES.md](docs/ADVANCED_FEATURES.md)
+- **Proxy & Cookies**: See [docs/PROXY_AND_COOKIES.md](docs/PROXY_AND_COOKIES.md) for geo-blocking and authentication setup
 - **Windows Setup**: See [docs/WINDOWS_QUICKSTART.md](docs/WINDOWS_QUICKSTART.md)
 
 ## 🔒 Production Considerations
