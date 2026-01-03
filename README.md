@@ -59,7 +59,7 @@ ytder_python_backend/
 ## 📦 Installation
 
 ### Prerequisites
-- Python 3.9+
+- Python 3.10+ (3.12.0 recommended)
 - pip
 
 ### Setup
