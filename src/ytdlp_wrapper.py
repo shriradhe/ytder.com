@@ -102,6 +102,19 @@ class YtDlpWrapper:
         
         # Log configuration
         logger.info(f"YtDlpWrapper initialized with max {settings.max_concurrent_downloads} concurrent processes")
+        
+        # Log yt-dlp version
+        try:
+            import subprocess
+            result = subprocess.run(['yt-dlp', '--version'], capture_output=True, text=True, timeout=5)
+            if result.returncode == 0:
+                version = result.stdout.strip()
+                logger.info(f"yt-dlp version: {version}")
+            else:
+                logger.warning("Could not determine yt-dlp version")
+        except Exception as e:
+            logger.warning(f"Could not check yt-dlp version: {e}")
+        
         if settings.proxy:
             logger.info(f"Proxy enabled: {settings.proxy[:50]}..." if len(settings.proxy) > 50 else f"Proxy enabled: {settings.proxy}")
         if settings.cookies_file and os.path.exists(settings.cookies_file):
