@@ -4,7 +4,7 @@ services:
     env: python
     # Note: Remove 'plan' to use free tier, or set to 'free' if available
     # plan: free  # Free tier (may still require payment info for verification)
-    buildCommand: pip install -r requirements.txt
+    buildCommand: bash build.sh
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHON_VERSION
