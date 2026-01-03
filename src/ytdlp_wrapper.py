@@ -180,9 +180,17 @@ class YtDlpWrapper:
                         # Check exit code
                         if process.returncode != 0:
                             error_msg = stderr.decode('utf-8', errors='ignore').strip()
-                            # Check if it's a bot detection error
-                            if is_youtube and ("Sign in to confirm" in error_msg or "bot" in error_msg.lower()):
-                                logger.warning(f"Bot detection with player_client={client}, trying next client...")
+                            # Check if it's a retryable error (bot detection or player response failure)
+                            retryable_errors = [
+                                "Sign in to confirm",
+                                "bot",
+                                "Failed to extract any player response",
+                                "Unable to extract video data"
+                            ]
+                            should_retry = is_youtube and any(err.lower() in error_msg.lower() for err in retryable_errors)
+                            
+                            if should_retry:
+                                logger.warning(f"Retryable error with player_client={client}: {error_msg[:100]}...")
                                 last_error = error_msg
                                 continue  # Try next client
                             else:
@@ -351,9 +359,17 @@ class YtDlpWrapper:
                             # Check exit code
                             if process.returncode != 0:
                                 error_msg = stderr.decode('utf-8', errors='ignore').strip()
-                                # Check if it's a bot detection error
-                                if is_youtube and ("Sign in to confirm" in error_msg or "bot" in error_msg.lower()):
-                                    logger.warning(f"Bot detection with player_client={client}, trying next client...")
+                                # Check if it's a retryable error (bot detection or player response failure)
+                                retryable_errors = [
+                                    "Sign in to confirm",
+                                    "bot",
+                                    "Failed to extract any player response",
+                                    "Unable to extract video data"
+                                ]
+                                should_retry = is_youtube and any(err.lower() in error_msg.lower() for err in retryable_errors)
+                                
+                                if should_retry:
+                                    logger.warning(f"Retryable error with player_client={client}: {error_msg[:100]}...")
                                     last_error = error_msg
                                     continue  # Try next client
                                 else:

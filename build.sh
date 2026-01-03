@@ -10,6 +10,10 @@ echo "🔧 Building ytder video downloader..."
 echo "📦 Installing Python packages..."
 pip install -r requirements.txt
 
+# Ensure yt-dlp is up-to-date (important for YouTube compatibility)
+echo "🔄 Updating yt-dlp to latest version..."
+pip install --upgrade yt-dlp
+
 # Note: FFmpeg is not included by default on Render
 # If you need FFmpeg for video merging, you'll need to:
 # 1. Use a Docker image with FFmpeg pre-installed, OR
