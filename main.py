@@ -530,6 +530,19 @@ async def get_available_formats(request: VideoRequest, req: Request):
     
     except Exception as e:
         error_msg = str(e)
+        
+        # Provide user-friendly error messages for common YouTube issues
+        if "Failed to extract any player response" in error_msg or "player response" in error_msg.lower():
+            user_friendly_msg = (
+                "Unable to extract video information from YouTube. "
+                "This can happen if YouTube is blocking requests or the video has restrictions. "
+                "Please try: (1) Using cookies for authentication (set COOKIES_FILE), "
+                "(2) Using a proxy to bypass geo-restrictions (set PROXY), "
+                "(3) Trying again later, or (4) Trying a different video."
+            )
+            logger.error(f"YouTube extraction failed: {error_msg}", exc_info=True)
+            raise HTTPException(status_code=503, detail=user_friendly_msg)
+        
         # Truncate very long error messages to prevent issues
         if len(error_msg) > 500:
             error_msg = error_msg[:500] + "..."
