@@ -211,6 +211,17 @@ class YtDlpWrapper:
                         # Check exit code
                         if process.returncode != 0:
                             error_msg = stderr.decode('utf-8', errors='ignore').strip()
+                            
+                            # Check for Instagram/login required errors (non-retryable, needs cookies)
+                            is_instagram = "instagram.com" in url
+                            if is_instagram and ("login required" in error_msg.lower() or "cookies" in error_msg.lower() or "rate-limit" in error_msg.lower()):
+                                logger.error(f"Instagram requires authentication: {error_msg[:200]}")
+                                raise RuntimeError(
+                                    f"Instagram requires cookies for authentication. "
+                                    f"Please configure COOKIES_FILE environment variable with Instagram cookies. "
+                                    f"Original error: {error_msg[:200]}"
+                                )
+                            
                             # Check if it's a retryable error (bot detection or player response failure)
                             retryable_errors = [
                                 "Sign in to confirm",

@@ -536,12 +536,23 @@ async def get_available_formats(request: VideoRequest, req: Request):
             user_friendly_msg = (
                 "Unable to extract video information from YouTube. "
                 "This can happen if YouTube is blocking requests or the video has restrictions. "
-                "Please try: (1) Using cookies for authentication (set COOKIES_FILE), "
-                "(2) Using a proxy to bypass geo-restrictions (set PROXY), "
-                "(3) Trying again later, or (4) Trying a different video."
+                "Solutions: (1) Configure cookies (set COOKIES_FILE), "
+                "(2) Use a proxy (set PROXY), "
+                "(3) Enable Apify fallback (set APIFY_ENABLED=true and APIFY_API_TOKEN), "
+                "(4) Try again later, or (5) Try a different video."
             )
             logger.error(f"YouTube extraction failed: {error_msg}", exc_info=True)
             raise HTTPException(status_code=503, detail=user_friendly_msg)
+        
+        # Provide user-friendly error messages for Instagram issues
+        if "login required" in error_msg.lower() or ("instagram" in error_msg.lower() and "cookies" in error_msg.lower()):
+            user_friendly_msg = (
+                "Instagram requires authentication via cookies. "
+                "Please configure COOKIES_FILE environment variable with Instagram cookies. "
+                "See documentation for how to export cookies from your browser."
+            )
+            logger.error(f"Instagram authentication required: {error_msg}", exc_info=True)
+            raise HTTPException(status_code=401, detail=user_friendly_msg)
         
         # Truncate very long error messages to prevent issues
         if len(error_msg) > 500:
