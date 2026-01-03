@@ -74,7 +74,9 @@ class ApifyClient:
     
     async def _start_actor_run(self, video_id: str) -> str:
         """Start an Apify actor run."""
-        url = f"{self.BASE_URL}/acts/{self.actor_id}/runs"
+        # Apify API uses ~ instead of / in actor IDs for the URL
+        actor_id_url = self.actor_id.replace("/", "~")
+        url = f"{self.BASE_URL}/acts/{actor_id_url}/runs"
         headers = {
             "Authorization": f"Bearer {self.api_token}",
             "Content-Type": "application/json"
@@ -119,7 +121,7 @@ class ApifyClient:
     
     async def _wait_for_run_completion(self, run_id: str) -> Dict[str, Any]:
         """Wait for Apify actor run to complete and return results."""
-        url = f"{self.BASE_URL}/actor-runs/{run_id}"
+        status_url = f"{self.BASE_URL}/actor-runs/{run_id}"
         headers = {
             "Authorization": f"Bearer {self.api_token}"
         }
@@ -132,14 +134,14 @@ class ApifyClient:
             while elapsed < max_wait_time:
                 try:
                     # Check run status
-                    response = await client.get(f"{url}", headers=headers)
+                    response = await client.get(status_url, headers=headers)
                     response.raise_for_status()
                     run_data = response.json()["data"]
                     status = run_data["status"]
                     
                     if status == "SUCCEEDED":
-                        # Get results
-                        results_url = f"{url}/dataset/items"
+                        # Get results from dataset
+                        results_url = f"{status_url}/dataset/items"
                         results_response = await client.get(results_url, headers=headers)
                         results_response.raise_for_status()
                         results = results_response.json()["data"]
