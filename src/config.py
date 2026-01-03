@@ -43,9 +43,11 @@ class Settings(BaseSettings):
     # Apify API settings (fallback when yt-dlp fails)
     # Get API token from: https://console.apify.com/account/integrations
     apify_api_token: Optional[str] = os.getenv("APIFY_API_TOKEN", None)
-    # Apify Actor ID for YouTube scraping (default: YouTube Scraper)
-    # Popular actors: "apify/youtube-scraper", "bluepenguins455/yt-downloader"
-    apify_actor_id: str = os.getenv("APIFY_ACTOR_ID", "apify/youtube-scraper")
+    # Apify Actor ID for YouTube scraping
+    # Find available actors at: https://apify.com/store (search for "youtube")
+    # Format: "username/actor-name" (e.g., "bluepenguins455/yt-downloader")
+    # NOTE: You must set APIFY_ACTOR_ID environment variable - no default actor
+    apify_actor_id: str = os.getenv("APIFY_ACTOR_ID", "")
     # Timeout for Apify API calls (in seconds)
     apify_timeout_seconds: int = int(os.getenv("APIFY_TIMEOUT_SECONDS", "120"))
     # Enable Apify as fallback (set to "true" to enable)

@@ -19,14 +19,16 @@ class ApifyClient:
         self.api_token = settings.apify_api_token
         self.actor_id = settings.apify_actor_id
         self.timeout = settings.apify_timeout_seconds
-        self.enabled = settings.apify_enabled and self.api_token is not None
+        self.enabled = settings.apify_enabled and self.api_token is not None and bool(self.actor_id)
         
         if self.enabled:
             logger.info(f"Apify client enabled with actor: {self.actor_id}")
         elif settings.apify_enabled and not self.api_token:
             logger.warning("Apify is enabled but APIFY_API_TOKEN is not set")
+        elif settings.apify_enabled and not self.actor_id:
+            logger.warning("Apify is enabled but APIFY_ACTOR_ID is not set. Find actors at https://apify.com/store")
         else:
-            logger.info("Apify client disabled (set APIFY_ENABLED=true and APIFY_API_TOKEN to enable)")
+            logger.info("Apify client disabled (set APIFY_ENABLED=true, APIFY_API_TOKEN, and APIFY_ACTOR_ID to enable)")
     
     def _extract_video_id(self, url: str) -> Optional[str]:
         """Extract YouTube video ID from URL."""
@@ -111,7 +113,17 @@ class ApifyClient:
                 logger.info(f"Apify actor run started: {run_id}")
                 return run_id
             except httpx.HTTPStatusError as e:
-                error_msg = f"Apify API error: {e.response.status_code} - {e.response.text}"
+                error_text = e.response.text
+                if e.response.status_code == 404:
+                    # Actor not found - provide helpful error message
+                    error_msg = (
+                        f"Apify actor '{self.actor_id}' not found. "
+                        f"Please check the actor ID at https://apify.com/store and update APIFY_ACTOR_ID. "
+                        f"Common YouTube actors: 'bluepenguins455/yt-downloader' or search for 'youtube' in Apify store. "
+                        f"API error: {e.response.status_code} - {error_text}"
+                    )
+                else:
+                    error_msg = f"Apify API error: {e.response.status_code} - {error_text}"
                 logger.error(error_msg)
                 raise RuntimeError(error_msg)
             except Exception as e:

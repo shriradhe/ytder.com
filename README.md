@@ -175,7 +175,7 @@ Edit `src/config.py` or create `.env` file in the project root:
 | `COOKIES_FILE` | None | Path to cookies.txt file for authentication |
 | `APIFY_ENABLED` | false | Enable Apify API fallback when yt-dlp fails |
 | `APIFY_API_TOKEN` | None | Apify API token (get from https://console.apify.com) |
-| `APIFY_ACTOR_ID` | `apify/youtube-scraper` | Apify actor ID for YouTube scraping |
+| `APIFY_ACTOR_ID` | None (required) | Apify actor ID (format: username/actor-name, find at https://apify.com/store) |
 
 **📖 For detailed setup:**
 - [Proxy & Cookies](docs/PROXY_AND_COOKIES.md) - Proxy and cookies configuration

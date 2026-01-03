@@ -20,19 +20,22 @@ Apify is a web scraping and automation platform that provides cloud-based actors
 2. Navigate to [Account Settings → Integrations](https://console.apify.com/account/integrations)
 3. Copy your **API Token**
 
-### 2. Choose an Actor
+### 2. Find a YouTube Actor
 
-Apify provides several YouTube scraping actors:
+**Important:** You need to find a working YouTube actor from the Apify store:
 
-#### Recommended: `apify/youtube-scraper`
-- Official Apify actor
-- Well-maintained and updated
-- Good for extracting video metadata and formats
+1. Go to [Apify Store](https://apify.com/store)
+2. Search for "youtube" or "youtube scraper"
+3. Browse available actors and check their documentation
+4. Choose an actor that:
+   - Supports extracting video metadata (not just downloading)
+   - Has recent updates/maintenance
+   - Fits your needs
 
-#### Alternative: `bluepenguins455/yt-downloader`
-- Uses yt-dlp under the hood
-- Can download videos directly
-- Good for download links
+**Common Actor Format:**
+- Actor IDs are in format: `username/actor-name`
+- Example: `bluepenguins455/yt-downloader`
+- Always verify the actor exists and works before using it
 
 ### 3. Configure Environment Variables
 
@@ -45,8 +48,8 @@ APIFY_ENABLED=true
 # Your Apify API token (required)
 APIFY_API_TOKEN=apify_api_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
-# Actor ID (optional, defaults to apify/youtube-scraper)
-APIFY_ACTOR_ID=apify/youtube-scraper
+# Actor ID (REQUIRED - find actors at https://apify.com/store)
+APIFY_ACTOR_ID=username/actor-name
 
 # Timeout in seconds (optional, defaults to 120)
 APIFY_TIMEOUT_SECONDS=120
@@ -58,7 +61,7 @@ APIFY_TIMEOUT_SECONDS=120
 2. Add environment variables:
    - **Key**: `APIFY_ENABLED` → **Value**: `true`
    - **Key**: `APIFY_API_TOKEN` → **Value**: `your-api-token-here`
-   - **Key**: `APIFY_ACTOR_ID` → **Value**: `apify/youtube-scraper` (optional)
+   - **Key**: `APIFY_ACTOR_ID` → **Value**: `username/actor-name` (REQUIRED - find at https://apify.com/store)
 3. Save and redeploy
 
 ## Cost Considerations
