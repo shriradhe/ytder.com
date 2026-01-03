@@ -40,6 +40,17 @@ class Settings(BaseSettings):
     # Path to cookies.txt file (Netscape format or JSON format)
     cookies_file: Optional[str] = os.getenv("COOKIES_FILE", os.getenv("YOUTUBE_COOKIES_FILE", None))
     
+    # Apify API settings (fallback when yt-dlp fails)
+    # Get API token from: https://console.apify.com/account/integrations
+    apify_api_token: Optional[str] = os.getenv("APIFY_API_TOKEN", None)
+    # Apify Actor ID for YouTube scraping (default: YouTube Scraper)
+    # Popular actors: "apify/youtube-scraper", "bluepenguins455/yt-downloader"
+    apify_actor_id: str = os.getenv("APIFY_ACTOR_ID", "apify/youtube-scraper")
+    # Timeout for Apify API calls (in seconds)
+    apify_timeout_seconds: int = int(os.getenv("APIFY_TIMEOUT_SECONDS", "120"))
+    # Enable Apify as fallback (set to "true" to enable)
+    apify_enabled: bool = os.getenv("APIFY_ENABLED", "false").lower() == "true"
+    
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"

@@ -11,6 +11,14 @@ from .config import settings
 
 logger = logging.getLogger(__name__)
 
+# Import Apify client (optional fallback)
+try:
+    from .apify_client import ApifyClient
+    APIFY_AVAILABLE = True
+except ImportError:
+    APIFY_AVAILABLE = False
+    ApifyClient = None
+
 
 def _get_base_options() -> list:
     """
@@ -99,6 +107,16 @@ class YtDlpWrapper:
         """Initialize the wrapper with a semaphore for concurrency control."""
         self._semaphore = asyncio.Semaphore(settings.max_concurrent_downloads)
         self._active_processes = 0
+        
+        # Initialize Apify client if available and enabled
+        self._apify_client = None
+        if APIFY_AVAILABLE and settings.apify_enabled:
+            try:
+                self._apify_client = ApifyClient()
+                if self._apify_client.enabled:
+                    logger.info("Apify fallback enabled")
+            except Exception as e:
+                logger.warning(f"Failed to initialize Apify client: {e}")
         
         # Log configuration
         logger.info(f"YtDlpWrapper initialized with max {settings.max_concurrent_downloads} concurrent processes")
@@ -225,9 +243,21 @@ class YtDlpWrapper:
                         last_error = error_str
                         continue
                 
-                # All clients failed
+                # All clients failed - try Apify as fallback
                 if last_error:
                     logger.error(f"All player clients failed. Last error: {last_error}")
+                    
+                    # Try Apify as fallback if enabled and available
+                    if self._apify_client and self._apify_client.enabled and is_youtube:
+                        logger.info("Attempting Apify API as fallback...")
+                        try:
+                            apify_result = await self._apify_client.get_video_info(url)
+                            logger.info("Successfully extracted video info using Apify API")
+                            return self._process_formats(apify_result)
+                        except Exception as apify_error:
+                            logger.error(f"Apify fallback also failed: {str(apify_error)}")
+                            # Continue to raise the original yt-dlp error
+                    
                     raise RuntimeError(f"yt-dlp execution failed after trying all player clients: {last_error}")
                 else:
                     raise RuntimeError("yt-dlp execution failed: Unknown error")

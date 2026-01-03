@@ -39,6 +39,7 @@ ytder_python_backend/
 ### Advanced Features
 - **Proxy Support**: Route requests through HTTP/HTTPS/SOCKS proxies for geo-blocking bypass
 - **Automatic Cookies**: Use cookies file for all requests (access age-restricted/private content)
+- **Apify API Fallback**: Automatic fallback to Apify API when yt-dlp fails (bypasses IP blocking)
 - **Multi-platform Support**: YouTube, Instagram, Facebook, TikTok, and 8+ more platforms
 
 ### Architecture
@@ -88,9 +89,15 @@ PROXY=socks5://proxy.example.com:1080
 
 # Cookies file for authentication (optional)
 COOKIES_FILE=/path/to/cookies.txt
+
+# Apify API fallback (optional - when yt-dlp fails)
+APIFY_ENABLED=true
+APIFY_API_TOKEN=your-apify-token-here
+APIFY_ACTOR_ID=apify/youtube-scraper
 ```
 
-**See [docs/PROXY_AND_COOKIES.md](docs/PROXY_AND_COOKIES.md) for detailed proxy and cookies configuration.**
+**See [docs/PROXY_AND_COOKIES.md](docs/PROXY_AND_COOKIES.md) for proxy and cookies configuration.**  
+**See [docs/APIFY_INTEGRATION.md](docs/APIFY_INTEGRATION.md) for Apify API fallback setup.**
 
 ## 🏃 Usage
 
@@ -166,8 +173,13 @@ Edit `src/config.py` or create `.env` file in the project root:
 | `YTDLP_TIMEOUT_SECONDS` | 60 | Max yt-dlp execution time |
 | `PROXY` | None | Proxy URL (http/https/socks4/socks5) for geo-blocking bypass |
 | `COOKIES_FILE` | None | Path to cookies.txt file for authentication |
+| `APIFY_ENABLED` | false | Enable Apify API fallback when yt-dlp fails |
+| `APIFY_API_TOKEN` | None | Apify API token (get from https://console.apify.com) |
+| `APIFY_ACTOR_ID` | `apify/youtube-scraper` | Apify actor ID for YouTube scraping |
 
-**📖 For detailed proxy and cookies setup, see [docs/PROXY_AND_COOKIES.md](docs/PROXY_AND_COOKIES.md)**
+**📖 For detailed setup:**
+- [Proxy & Cookies](docs/PROXY_AND_COOKIES.md) - Proxy and cookies configuration
+- [Apify Integration](docs/APIFY_INTEGRATION.md) - Apify API fallback setup
 
 ## 🔥 Performance Characteristics
 
@@ -206,6 +218,7 @@ Use `/api/health` endpoint to monitor:
 - **Admin Panel**: See [docs/ADMIN_PANEL_GUIDE.md](docs/ADMIN_PANEL_GUIDE.md)
 - **Advanced Features**: See [docs/ADVANCED_FEATURES.md](docs/ADVANCED_FEATURES.md)
 - **Proxy & Cookies**: See [docs/PROXY_AND_COOKIES.md](docs/PROXY_AND_COOKIES.md) for geo-blocking and authentication setup
+- **Apify Integration**: See [docs/APIFY_INTEGRATION.md](docs/APIFY_INTEGRATION.md) for Apify API fallback when yt-dlp fails
 - **Windows Setup**: See [docs/WINDOWS_QUICKSTART.md](docs/WINDOWS_QUICKSTART.md)
 
 ## 🔒 Production Considerations
