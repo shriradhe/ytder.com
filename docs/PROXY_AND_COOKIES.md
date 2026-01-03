@@ -151,6 +151,20 @@ Or for Render.com:
 
 ### Proxy Issues
 
+**Error**: `[Errno -5] No address associated with hostname` or DNS errors
+- **Most common cause**: Invalid or unreachable proxy server
+- **Quick fix**: 
+  1. Go to Render dashboard → Environment
+  2. Check if `PROXY` variable exists
+  3. **If you don't need proxy**: Delete the `PROXY` variable
+  4. **If you need proxy**: Verify the proxy URL is correct and accessible
+  5. Redeploy the service
+- Verify proxy URL format is correct (must include protocol):
+  - ✅ `http://proxy.example.com:8080`
+  - ✅ `socks5://proxy.example.com:1080`
+  - ❌ `proxy.example.com:8080` (missing protocol - will cause DNS errors)
+  - ❌ `http://invalid-host-that-doesnt-exist.com:8080` (unreachable host)
+
 **Error**: Connection timeout
 - Check proxy URL is correct
 - Verify proxy server is accessible

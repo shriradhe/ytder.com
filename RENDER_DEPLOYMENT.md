@@ -148,6 +148,29 @@ You can set these in Render's dashboard under "Environment":
 
 ## 🔧 Troubleshooting
 
+### Python Version Issues
+
+**Error**: `Deprecated Feature: Support for Python version 3.9 has been deprecated`
+- Ensure `runtime.txt` contains `python-3.11.0`
+- **Solution**: Trigger a manual deployment with build cache cleared:
+  1. Go to Render dashboard → Your service
+  2. Click "Manual Deploy" → "Clear build cache & deploy"
+  3. Wait for deployment to complete
+  4. Verify Python version in build logs shows 3.11+
+
+### DNS/Network Errors
+
+**Error**: `[Errno -5] No address associated with hostname`
+- **Common cause**: Invalid `PROXY` environment variable
+- **Solution**:
+  1. Go to Render dashboard → Environment tab
+  2. Check if `PROXY` variable exists
+  3. If you don't need proxy: **Delete the `PROXY` variable**
+  4. If you need proxy: Verify proxy URL is correct and accessible
+  5. Redeploy service
+- Proxy URL must include protocol: `http://` or `socks5://`
+- Test proxy before using: `curl -x http://your-proxy:port https://www.google.com`
+
 ### Service won't start
 - Check logs in Render dashboard
 - Verify `requirements.txt` is correct
